@@ -1,6 +1,8 @@
 {% load static %}
 <nav class="navbar navbar-admin">
-  <a href="{% url 'accueil' %}" class="navbar-logo"> 🎵 Badju's Records </a>
+  <a href="{% url 'accueil' %}" class="navbar-logo">
+    <img src="{% static 'img/logo-transparent.png' %}" alt="Badju's Records" class="navbar-logo-img">
+  </a>
 
   <ul class="navbar-links">
     <li><a href="{% url 'accueil' %}">Accueil</a></li>
@@ -26,22 +28,16 @@
         <ul class="dropdown-menu">
           <li><a href="/admin/">🛡️ Administration</a></li>
           <li>
-            <a href="/admin/models_app/morceau/?statut=en_attente"
-              >⏳ Morceaux en attente</a
-            >
+            <a href="/admin/models_app/morceau/?statut=en_attente">⏳ Morceaux en attente</a>
           </li>
           <li>
-            <a href="/admin/models_app/video/?statut=en_attente"
-              >⏳ Vidéos en attente</a
-            >
+            <a href="/admin/models_app/video/?statut=en_attente">⏳ Vidéos en attente</a>
           </li>
           <li class="dropdown-divider"></li>
           <li><a href="{% url 'modifier_profil' %}">✏️ Modifier profil</a></li>
           <li class="dropdown-divider"></li>
           <li>
-            <a href="{% url 'deconnexion' %}" class="dropdown-logout"
-              >🚪 Déconnexion</a
-            >
+            <a href="{% url 'deconnexion' %}" class="dropdown-logout">🚪 Déconnexion</a>
           </li>
         </ul>
       </div>

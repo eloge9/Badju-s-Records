@@ -1,6 +1,8 @@
 {% load static %}
 <nav class="navbar">
-  <a href="{% url 'accueil' %}" class="navbar-logo"> 🎵 Badju's Records </a>
+  <a href="{% url 'accueil' %}" class="navbar-logo">
+    <img src="{% static 'img/logo-transparent.png' %}" alt="Badju's Records" class="navbar-logo-img">
+  </a>
 
   <ul class="navbar-links">
     <li><a href="{% url 'accueil' %}">Accueil</a></li>
@@ -15,11 +17,7 @@
     </a>
     <div class="navbar-user">
       {% if user.profil_artiste.photo %}
-      <img
-        src="{{ user.profil_artiste.photo.url }}"
-        alt="avatar"
-        class="navbar-avatar"
-      />
+      <img src="{{ user.profil_artiste.photo.url }}" alt="avatar" class="navbar-avatar" />
       {% elif user.avatar %}
       <img src="{{ user.avatar.url }}" alt="avatar" class="navbar-avatar" />
       {% else %}
@@ -44,9 +42,7 @@
           <li><a href="{% url 'modifier_profil' %}">✏️ Modifier profil</a></li>
           <li class="dropdown-divider"></li>
           <li>
-            <a href="{% url 'deconnexion' %}" class="dropdown-logout"
-              >🚪 Déconnexion</a
-            >
+            <a href="{% url 'deconnexion' %}" class="dropdown-logout">🚪 Déconnexion</a>
           </li>
         </ul>
       </div>

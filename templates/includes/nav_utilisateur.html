@@ -1,6 +1,8 @@
 {% load static %}
 <nav class="navbar">
-  <a href="{% url 'accueil' %}" class="navbar-logo"> 🎵 Badju's Records </a>
+  <a href="{% url 'accueil' %}" class="navbar-logo">
+    <img src="{% static 'img/logo-transparent.png' %}" alt="Badju's Records" class="navbar-logo-img">
+  </a>
 
   <ul class="navbar-links">
     <li><a href="{% url 'accueil' %}">Accueil</a></li>
@@ -27,9 +29,7 @@
           <li><a href="{% url 'devenir_artiste' %}">🎤 Devenir Artiste</a></li>
           <li class="dropdown-divider"></li>
           <li>
-            <a href="{% url 'deconnexion' %}" class="dropdown-logout"
-              >🚪 Déconnexion</a
-            >
+            <a href="{% url 'deconnexion' %}" class="dropdown-logout">🚪 Déconnexion</a>
           </li>
         </ul>
       </div>
