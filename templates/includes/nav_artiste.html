@@ -1,0 +1,55 @@
+{% load static %}
+<nav class="navbar">
+  <a href="{% url 'accueil' %}" class="navbar-logo"> 🎵 Badju's Records </a>
+
+  <ul class="navbar-links">
+    <li><a href="{% url 'accueil' %}">Accueil</a></li>
+    <li><a href="{% url 'top100' %}">Top 100</a></li>
+    <li><a href="{% url 'badju_tv' %}">Badju TV</a></li>
+    <li><a href="{% url 'liste_artistes' %}">Artistes</a></li>
+  </ul>
+
+  <div class="navbar-auth">
+    <a href="{% url 'ajouter_morceau' %}" class="btn btn-outline">
+      + Ajouter un morceau
+    </a>
+    <div class="navbar-user">
+      {% if user.profil_artiste.photo %}
+      <img
+        src="{{ user.profil_artiste.photo.url }}"
+        alt="avatar"
+        class="navbar-avatar"
+      />
+      {% elif user.avatar %}
+      <img src="{{ user.avatar.url }}" alt="avatar" class="navbar-avatar" />
+      {% else %}
+      <div class="navbar-avatar-placeholder">
+        {{ user.username|first|upper }}
+      </div>
+      {% endif %}
+      <div class="navbar-dropdown">
+        <span class="navbar-username">
+          {{ user.profil_artiste.nom_artiste }} {% if
+          user.profil_artiste.verified %}
+          <span class="badge-verified" title="Artiste vérifié">✓</span>
+          {% endif %}
+        </span>
+        <ul class="dropdown-menu">
+          <li><a href="{% url 'dashboard' %}">🎵 Mon Dashboard</a></li>
+          <li>
+            <a href="{% url 'ajouter_morceau' %}">🎶 Ajouter un morceau</a>
+          </li>
+          <li><a href="{% url 'ajouter_video' %}">🎬 Ajouter une vidéo</a></li>
+          <li class="dropdown-divider"></li>
+          <li><a href="{% url 'modifier_profil' %}">✏️ Modifier profil</a></li>
+          <li class="dropdown-divider"></li>
+          <li>
+            <a href="{% url 'deconnexion' %}" class="dropdown-logout"
+              >🚪 Déconnexion</a
+            >
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>

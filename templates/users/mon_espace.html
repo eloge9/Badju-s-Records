@@ -1,0 +1,173 @@
+{% extends 'base.html' %} {% load static %} {% block title %}Mon Espace —
+Badju's Records{% endblock %} {% block content %}
+<div class="dashboard-container">
+  <!-- ── HEADER ── -->
+  <div class="dashboard-header">
+    <div class="dashboard-artiste-info">
+      {% if user.avatar %}
+      <img src="{{ user.avatar.url }}" alt="avatar" class="dashboard-avatar" />
+      {% else %}
+      <div
+        class="dashboard-avatar-placeholder"
+        style="background: var(--accent-gold)"
+      >
+        {{ user.username|first|upper }}
+      </div>
+      {% endif %}
+      <div class="dashboard-artiste-text">
+        <h1 class="dashboard-nom">{{ user.nom_affiche }}</h1>
+        <p class="dashboard-genre">
+          @{{ user.username }} — {{ user.pays|default:"Pays non renseigné" }}
+        </p>
+        <span class="badge-utilisateur">Utilisateur</span>
+      </div>
+    </div>
+    <div class="dashboard-header-actions">
+      <a href="{% url 'modifier_profil' %}" class="btn btn-outline"
+        >✏️ Modifier profil</a
+      >
+    </div>
+  </div>
+
+  <!-- ── STATS ── -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-number">{{ nb_votes }}</span>
+      <span class="stat-label">Votes donnés</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number">{{ nb_telechargements }}</span>
+      <span class="stat-label">Téléchargements</span>
+    </div>
+  </div>
+
+  <!-- ── DEVENIR ARTISTE ── -->
+  {% if peut_devenir_artiste %}
+  <div class="devenir-artiste-banner">
+    <div class="banner-content">
+      <h2>🎤 Tu es artiste ?</h2>
+      <p>Crée ton profil artiste et publie ta musique sur Badju's Records.</p>
+    </div>
+    <a href="{% url 'devenir_artiste' %}" class="btn btn-gold"
+      >Devenir Artiste</a
+    >
+  </div>
+  {% endif %}
+
+  <!-- ── TABS ── -->
+  <div class="dashboard-tabs">
+    <button class="tab-btn active" onclick="showTab('votes')">
+      👍 Mes votes
+    </button>
+    <button class="tab-btn" onclick="showTab('telechargements')">
+      ⬇ Mes téléchargements
+    </button>
+  </div>
+
+  <!-- ── TAB VOTES ── -->
+  <div id="tab-votes" class="tab-content active">
+    <h2 class="section-title">Mes votes</h2>
+    {% if votes %}
+    <div class="dashboard-liste">
+      {% for vote in votes %}
+      <div class="dashboard-item">
+        <div class="dashboard-item-left">
+          {% if vote.morceau.pochette %}
+          <img
+            src="{{ vote.morceau.pochette.url }}"
+            alt="pochette"
+            class="dashboard-pochette"
+          />
+          {% else %}
+          <div class="dashboard-pochette pochette-placeholder">🎵</div>
+          {% endif %}
+          <div class="dashboard-item-info">
+            <span class="dashboard-item-titre">{{ vote.morceau.titre }}</span>
+            <span class="dashboard-item-meta"
+              >{{ vote.morceau.artiste.nom_artiste }}</span
+            >
+            <span class="dashboard-item-meta"
+              >{{ vote.created_at|date:"d/m/Y" }}</span
+            >
+          </div>
+        </div>
+        <a
+          href="{% url 'detail_morceau' vote.morceau.id %}"
+          class="btn btn-ghost btn-sm"
+          >Voir →</a
+        >
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-block">
+      <p>Tu n'as encore voté pour aucun morceau.</p>
+      <a href="{% url 'top100' %}" class="btn btn-gold" style="margin-top: 1rem"
+        >Découvrir le Top 100</a
+      >
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── TAB TÉLÉCHARGEMENTS ── -->
+  <div id="tab-telechargements" class="tab-content">
+    <h2 class="section-title">Mes téléchargements</h2>
+    {% if telechargements %}
+    <div class="dashboard-liste">
+      {% for dl in telechargements %}
+      <div class="dashboard-item">
+        <div class="dashboard-item-left">
+          {% if dl.morceau.pochette %}
+          <img
+            src="{{ dl.morceau.pochette.url }}"
+            alt="pochette"
+            class="dashboard-pochette"
+          />
+          {% else %}
+          <div class="dashboard-pochette pochette-placeholder">🎵</div>
+          {% endif %}
+          <div class="dashboard-item-info">
+            <span class="dashboard-item-titre">{{ dl.morceau.titre }}</span>
+            <span class="dashboard-item-meta"
+              >{{ dl.morceau.artiste.nom_artiste }}</span
+            >
+            <span class="dashboard-item-meta"
+              >{{ dl.created_at|date:"d/m/Y" }}</span
+            >
+          </div>
+        </div>
+        <a
+          href="{% url 'detail_morceau' dl.morceau.id %}"
+          class="btn btn-ghost btn-sm"
+          >Voir →</a
+        >
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-block">
+      <p>Tu n'as encore rien téléchargé.</p>
+      <a
+        href="{% url 'accueil' %}"
+        class="btn btn-gold"
+        style="margin-top: 1rem"
+        >Découvrir la musique</a
+      >
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  function showTab(tab) {
+    document
+      .querySelectorAll(".tab-content")
+      .forEach((t) => t.classList.remove("active"));
+    document
+      .querySelectorAll(".tab-btn")
+      .forEach((b) => b.classList.remove("active"));
+    document.getElementById("tab-" + tab).classList.add("active");
+    event.target.classList.add("active");
+  }
+</script>
+{% endblock %}

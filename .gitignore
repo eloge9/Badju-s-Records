@@ -1,0 +1,77 @@
+# ─────────────────────────────────────────────
+# ENVIRONNEMENT VIRTUEL
+# ─────────────────────────────────────────────
+env/
+venv/
+.venv/
+ENV/
+
+# ─────────────────────────────────────────────
+# DJANGO
+# ─────────────────────────────────────────────
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+db.sqlite3
+*.sqlite3
+
+# Fichiers statiques collectés
+staticfiles/
+
+# Fichiers media uploadés (photos, mp3, vidéos)
+media/
+
+# ─────────────────────────────────────────────
+# VARIABLES D'ENVIRONNEMENT
+# ─────────────────────────────────────────────
+.env
+.env.local
+.env.production
+*.env
+
+# ─────────────────────────────────────────────
+# ÉDITEURS
+# ─────────────────────────────────────────────
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ─────────────────────────────────────────────
+# SYSTÈME
+# ─────────────────────────────────────────────
+
+# Windows
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# ─────────────────────────────────────────────
+# LOGS
+# ─────────────────────────────────────────────
+*.log
+logs/
+
+# ─────────────────────────────────────────────
+# MIGRATIONS (optionnel — on les garde ici)
+# ─────────────────────────────────────────────
+# Si tu veux ignorer les migrations décommenter :
+# */migrations/*.py
+# !*/migrations/__init__.py

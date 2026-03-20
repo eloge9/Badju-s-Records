@@ -1,0 +1,40 @@
+{% load static %}
+<footer class="footer">
+  <div class="footer-content">
+    <div class="footer-brand">
+      <span class="footer-logo">🎵 Badju's Records</span>
+      <p class="footer-slogan">La voix de la musique togolaise</p>
+    </div>
+
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <ul>
+          <li><a href="{% url 'accueil' %}">Accueil</a></li>
+          <li><a href="{% url 'top100' %}">Top 100</a></li>
+          <li><a href="{% url 'badju_tv' %}">Badju TV</a></li>
+          <li><a href="{% url 'liste_artistes' %}">Artistes</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Compte</h4>
+        <ul>
+          {% if user.is_authenticated %} {% if user.role == 'artiste' %}
+          <li><a href="{% url 'dashboard' %}">Mon Dashboard</a></li>
+          {% else %}
+          <li><a href="{% url 'mon_espace' %}">Mon Espace</a></li>
+          {% endif %}
+          <li><a href="{% url 'deconnexion' %}">Déconnexion</a></li>
+          {% else %}
+          <li><a href="{% url 'inscription' %}">S'inscrire</a></li>
+          <li><a href="{% url 'connexion' %}">Connexion</a></li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>© 2025 Badju's Records — Tous droits réservés</p>
+  </div>
+</footer>

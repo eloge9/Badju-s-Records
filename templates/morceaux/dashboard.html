@@ -1,0 +1,558 @@
+{% extends 'base.html' %} {% load static %} {% block title %}Mon Dashboard —
+Badju's Records{% endblock %} {% block content %}
+
+<div class="dashboard-container">
+  <!-- ── HEADER DASHBOARD ── -->
+  <div class="dashboard-header">
+    <div class="dashboard-artiste-info">
+      {% if artiste.photo %}
+      <img
+        src="{{ artiste.photo.url }}"
+        alt="{{ artiste.nom_artiste }}"
+        class="dashboard-avatar"
+      />
+      {% else %}
+      <div class="dashboard-avatar-placeholder">
+        {{ artiste.nom_artiste|first|upper }}
+      </div>
+      {% endif %}
+      <div class="dashboard-artiste-text">
+        <h1 class="dashboard-nom">
+          {{ artiste.nom_artiste }} {% if artiste.verified %}
+          <span class="badge-verified" title="Artiste vérifié">✓</span>
+          {% endif %}
+        </h1>
+        <p class="dashboard-genre">
+          {{ artiste.get_genre_display }} — {{ artiste.ville }}
+        </p>
+        <span class="badge-artiste">🎤 Artiste</span>
+      </div>
+    </div>
+    <div class="dashboard-header-actions">
+      <a href="{% url 'ajouter_morceau' %}" class="btn btn-gold"
+        >+ Ajouter un morceau</a
+      >
+      <a href="{% url 'ajouter_video' %}" class="btn btn-outline"
+        >🎬 Ajouter une vidéo</a
+      >
+    </div>
+  </div>
+
+  <!-- ── STATS ── -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-number">{{ artiste.total_morceaux }}</span>
+      <span class="stat-label">Morceaux publiés</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number">{{ artiste.total_telechargements }}</span>
+      <span class="stat-label">Téléchargements</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number">{{ artiste.total_votes }}</span>
+      <span class="stat-label">Votes reçus</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number">{{ artiste.total_vues }}</span>
+      <span class="stat-label">Vues vidéos</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number">{{ artiste.meilleur_rang|default:"—" }}</span>
+      <span class="stat-label">Meilleur rang</span>
+    </div>
+  </div>
+
+  <!-- ── TABS ── -->
+  <div class="dashboard-tabs">
+    <button class="tab-btn active" onclick="showTab('morceaux')">
+      🎵 Mes morceaux
+    </button>
+    <button class="tab-btn" onclick="showTab('videos')">🎬 Mes vidéos</button>
+    <button class="tab-btn" onclick="showTab('profil')">✏️ Mon profil</button>
+  </div>
+
+  <!-- ── TAB MORCEAUX ── -->
+  <div id="tab-morceaux" class="tab-content active">
+    <div class="tab-header">
+      <h2 class="section-title">Mes morceaux</h2>
+      <a href="{% url 'ajouter_morceau' %}" class="btn btn-gold btn-sm"
+        >+ Ajouter</a
+      >
+    </div>
+
+    {% if morceaux %}
+    <div class="dashboard-liste">
+      {% for morceau in morceaux %}
+      <div class="dashboard-item">
+        <div class="dashboard-item-left">
+          {% if morceau.pochette %}
+          <img
+            src="{{ morceau.pochette.url }}"
+            alt="{{ morceau.titre }}"
+            class="dashboard-pochette"
+          />
+          {% else %}
+          <div class="dashboard-pochette pochette-placeholder">🎵</div>
+          {% endif %}
+          <div class="dashboard-item-info">
+            <span class="dashboard-item-titre">{{ morceau.titre }}</span>
+            <span class="dashboard-item-meta"
+              >{{ morceau.get_genre_display }} — {{ morceau.date_sortie }}</span
+            >
+            <div class="dashboard-item-stats">
+              <span>⬇ {{ morceau.nb_telechargements }}</span>
+              <span>👍 {{ morceau.nb_votes }}</span>
+              {% if morceau.rang %}
+              <span>🏆 #{{ morceau.rang }}</span>
+              {% endif %}
+              <span>{{ morceau.points }} pts</span>
+            </div>
+          </div>
+        </div>
+        <div class="dashboard-item-right">
+          <span class="statut-badge statut-{{ morceau.statut }}">
+            {% if morceau.statut == 'valide' %}✅ Validé {% elif morceau.statut
+            == 'en_attente' %}⏳ En attente {% else %}❌ Refusé {% endif %}
+          </span>
+          <div class="dashboard-item-actions">
+            <a
+              href="{% url 'modifier_morceau' morceau.id %}"
+              class="btn btn-outline btn-sm"
+              >✏️ Modifier</a
+            >
+            <a
+              href="{% url 'supprimer_morceau' morceau.id %}"
+              class="btn btn-danger btn-sm"
+              onclick="return confirm('Supprimer ce morceau ?');"
+              >🗑</a
+            >
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-block">
+      <p>Tu n'as pas encore ajouté de morceau.</p>
+      <a
+        href="{% url 'ajouter_morceau' %}"
+        class="btn btn-gold"
+        style="margin-top: 1rem"
+      >
+        + Ajouter mon premier morceau
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── TAB VIDÉOS ── -->
+  <div id="tab-videos" class="tab-content">
+    <div class="tab-header">
+      <h2 class="section-title">Mes vidéos</h2>
+      <a href="{% url 'ajouter_video' %}" class="btn btn-gold btn-sm"
+        >+ Ajouter</a
+      >
+    </div>
+
+    {% if videos %}
+    <div class="dashboard-liste">
+      {% for video in videos %}
+      <div class="dashboard-item">
+        <div class="dashboard-item-left">
+          {% if video.thumbnail %}
+          <img
+            src="{{ video.thumbnail.url }}"
+            alt="{{ video.titre }}"
+            class="dashboard-pochette"
+          />
+          {% else %}
+          <div class="dashboard-pochette pochette-placeholder">🎬</div>
+          {% endif %}
+          <div class="dashboard-item-info">
+            <span class="dashboard-item-titre">{{ video.titre }}</span>
+            <span class="dashboard-item-meta">
+              {% if video.morceau %}Lié à : {{ video.morceau.titre }}{% endif %}
+              {% if video.est_youtube %}— YouTube{% endif %}
+            </span>
+            <div class="dashboard-item-stats">
+              <span>👁 {{ video.nb_vues }} vues</span>
+            </div>
+          </div>
+        </div>
+        <div class="dashboard-item-right">
+          <span class="statut-badge statut-{{ video.statut }}">
+            {% if video.statut == 'valide' %}✅ Validé {% elif video.statut ==
+            'en_attente' %}⏳ En attente {% else %}❌ Refusé {% endif %}
+          </span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-block">
+      <p>Tu n'as pas encore ajouté de vidéo.</p>
+      <a
+        href="{% url 'ajouter_video' %}"
+        class="btn btn-gold"
+        style="margin-top: 1rem"
+      >
+        + Ajouter ma première vidéo
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── TAB PROFIL ── -->
+  <div id="tab-profil" class="tab-content">
+    <h2 class="section-title">Mon profil artiste</h2>
+    <div class="profil-artiste-form">
+      <div class="profil-artiste-preview">
+        {% if artiste.photo_cover %}
+        <img
+          src="{{ artiste.photo_cover.url }}"
+          alt="cover"
+          class="profil-cover"
+        />
+        {% else %}
+        <div class="profil-cover profil-cover-placeholder"></div>
+        {% endif %} {% if artiste.photo %}
+        <img src="{{ artiste.photo.url }}" alt="photo" class="profil-photo" />
+        {% else %}
+        <div class="profil-photo profil-photo-placeholder">
+          {{ artiste.nom_artiste|first|upper }}
+        </div>
+        {% endif %}
+      </div>
+      <div class="profil-artiste-actions">
+        <a href="{% url 'modifier_profil' %}" class="btn btn-gold"
+          >✏️ Modifier mon profil</a
+        >
+        <div class="profil-artiste-info">
+          <p><strong>Nom de scène :</strong> {{ artiste.nom_artiste }}</p>
+          <p><strong>Genre :</strong> {{ artiste.get_genre_display }}</p>
+          <p>
+            <strong>Ville :</strong> {{ artiste.ville|default:"Non renseigné" }}
+          </p>
+          <p>
+            <strong>Bio :</strong> {{ artiste.bio|default:"Aucune
+            biographie"|truncatechars:120 }}
+          </p>
+          {% if artiste.instagram %}
+          <p>
+            <strong>Instagram :</strong>
+            <a href="{{ artiste.instagram }}" target="_blank"
+              >{{ artiste.instagram }}</a
+            >
+          </p>
+          {% endif %} {% if artiste.facebook %}
+          <p>
+            <strong>Facebook :</strong>
+            <a href="{{ artiste.facebook }}" target="_blank"
+              >{{ artiste.facebook }}</a
+            >
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %} {% block extra_js %}
+<script>
+  function showTab(tab) {
+    document
+      .querySelectorAll(".tab-content")
+      .forEach((t) => t.classList.remove("active"));
+    document
+      .querySelectorAll(".tab-btn")
+      .forEach((b) => b.classList.remove("active"));
+    document.getElementById("tab-" + tab).classList.add("active");
+    event.target.classList.add("active");
+  }
+</script>
+{% endblock %} {% block extra_css %}
+<style>
+  .dashboard-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+  .dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+  .dashboard-artiste-info {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+  }
+  .dashboard-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--accent-gold);
+  }
+  .dashboard-avatar-placeholder {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    color: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+  }
+  .dashboard-nom {
+    font-family: var(--font-title);
+    font-size: 1.8rem;
+    letter-spacing: 1px;
+  }
+  .dashboard-genre {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    margin: 0.2rem 0 0.4rem;
+  }
+  .dashboard-header-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  /* ── Tabs ── */
+  .dashboard-tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    padding: 0.6rem 1.4rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: var(--transition);
+  }
+  .tab-btn:hover,
+  .tab-btn.active {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    border-color: var(--accent-gold);
+  }
+  .tab-content {
+    display: none;
+  }
+  .tab-content.active {
+    display: block;
+  }
+  .tab-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  /* ── Dashboard liste ── */
+  .dashboard-liste {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .dashboard-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    flex-wrap: wrap;
+    transition: var(--transition);
+  }
+  .dashboard-item:hover {
+    border-color: var(--border-hover);
+  }
+  .dashboard-item-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+  }
+  .dashboard-pochette {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .dashboard-pochette.pochette-placeholder {
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+  .dashboard-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .dashboard-item-titre {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .dashboard-item-meta {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+  .dashboard-item-stats {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+    color: var(--text-dark);
+    margin-top: 0.2rem;
+  }
+  .dashboard-item-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .dashboard-item-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  /* ── Statut badges ── */
+  .statut-badge {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .statut-valide {
+    background: rgba(0, 200, 100, 0.15);
+    color: #00cc64;
+    border: 1px solid rgba(0, 200, 100, 0.3);
+  }
+  .statut-en_attente {
+    background: rgba(245, 166, 35, 0.15);
+    color: var(--accent-gold);
+    border: 1px solid rgba(245, 166, 35, 0.3);
+  }
+  .statut-refuse {
+    background: rgba(255, 68, 68, 0.15);
+    color: var(--accent-red);
+    border: 1px solid rgba(255, 68, 68, 0.3);
+  }
+
+  .btn-danger {
+    background: rgba(255, 68, 68, 0.15);
+    color: var(--accent-red);
+    border: 1px solid rgba(255, 68, 68, 0.3);
+  }
+  .btn-danger:hover {
+    background: var(--accent-red);
+    color: white;
+  }
+
+  /* ── Profil artiste ── */
+  .profil-artiste-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .profil-artiste-preview {
+    position: relative;
+  }
+  .profil-cover {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+  }
+  .profil-cover-placeholder {
+    width: 100%;
+    height: 180px;
+    background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+    border-radius: var(--radius-md);
+    border: 1px dashed var(--border);
+  }
+  .profil-photo {
+    position: absolute;
+    bottom: -24px;
+    left: 24px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--bg-primary);
+  }
+  .profil-photo-placeholder {
+    position: absolute;
+    bottom: -24px;
+    left: 24px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    color: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    border: 3px solid var(--bg-primary);
+  }
+  .profil-artiste-actions {
+    padding-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .profil-artiste-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+  .profil-artiste-info strong {
+    color: var(--text-primary);
+  }
+
+  @media (max-width: 768px) {
+    .dashboard-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .dashboard-item {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .dashboard-item-right {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
+</style>
+{% endblock %}

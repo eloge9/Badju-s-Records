@@ -1,0 +1,130 @@
+{% load static %} {% if not user.is_authenticated %}
+<header class="header">
+  <div class="header-content">
+    <div class="header-brand">
+      <a href="{% url 'accueil' %}" class="header-logo">🎵 Badju's Records</a>
+      <p class="header-tagline">La voix de la musique togolaise</p>
+    </div>
+    <div class="header-cta">
+      <a href="{% url 'inscription' %}" class="btn btn-gold"
+        >Rejoindre la communauté</a
+      >
+    </div>
+  </div>
+</header>
+{% endif %} {% if user.is_authenticated and user.role == 'utilisateur' %}
+<header class="header">
+  <div class="header-content">
+    <div class="header-brand">
+      <a href="{% url 'accueil' %}" class="header-logo">🎵 Badju's Records</a>
+      <p class="header-tagline">La voix de la musique togolaise</p>
+    </div>
+    <div class="header-user-info">
+      {% if user.avatar %}
+      <img src="{{ user.avatar.url }}" alt="avatar" class="header-avatar" />
+      {% else %}
+      <div class="header-avatar-placeholder">
+        {{ user.username|first|upper }}
+      </div>
+      {% endif %}
+      <div class="header-user-text">
+        <span class="header-welcome">Bienvenue,</span>
+        <span class="header-username">{{ user.nom_affiche }}</span>
+        <span class="header-badge badge-utilisateur">Utilisateur</span>
+      </div>
+    </div>
+  </div>
+</header>
+{% endif %} {% if user.is_authenticated and user.role == 'artiste' %}
+<header class="header header-artiste">
+  <div class="header-content">
+    <div class="header-brand">
+      <a href="{% url 'accueil' %}" class="header-logo">🎵 Badju's Records</a>
+      <p class="header-tagline">La voix de la musique togolaise</p>
+    </div>
+    <div class="header-user-info">
+      {% if user.profil_artiste.photo %}
+      <img
+        src="{{ user.profil_artiste.photo.url }}"
+        alt="photo artiste"
+        class="header-avatar"
+      />
+      {% elif user.avatar %}
+      <img src="{{ user.avatar.url }}" alt="avatar" class="header-avatar" />
+      {% else %}
+      <div class="header-avatar-placeholder header-avatar-artiste">
+        {{ user.profil_artiste.nom_artiste|first|upper }}
+      </div>
+      {% endif %}
+      <div class="header-user-text">
+        <span class="header-welcome">Espace artiste</span>
+        <span class="header-username">
+          {{ user.profil_artiste.nom_artiste }} {% if
+          user.profil_artiste.verified %}
+          <span class="badge-verified" title="Artiste vérifié">✓</span>
+          {% endif %}
+        </span>
+        <span class="header-badge badge-artiste">🎤 Artiste</span>
+      </div>
+      <div class="header-artiste-stats">
+        <div class="header-stat">
+          <span class="header-stat-number"
+            >{{ user.profil_artiste.total_morceaux }}</span
+          >
+          <span class="header-stat-label">Morceaux</span>
+        </div>
+        <div class="header-stat">
+          <span class="header-stat-number"
+            >{{ user.profil_artiste.total_votes }}</span
+          >
+          <span class="header-stat-label">Votes</span>
+        </div>
+        <div class="header-stat">
+          <span class="header-stat-number"
+            >{{ user.profil_artiste.meilleur_rang|default:"—" }}</span
+          >
+          <span class="header-stat-label">Meilleur rang</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+{% endif %} {% if user.is_authenticated and user.role == 'administrateur' or
+user.is_authenticated and user.is_staff %}
+<header class="header header-admin">
+  <div class="header-content">
+    <div class="header-brand">
+      <a href="{% url 'accueil' %}" class="header-logo">🎵 Badju's Records</a>
+      <p class="header-tagline">Panneau d'administration</p>
+    </div>
+    <div class="header-user-info">
+      {% if user.avatar %}
+      <img src="{{ user.avatar.url }}" alt="avatar" class="header-avatar" />
+      {% else %}
+      <div class="header-avatar-placeholder header-avatar-admin">
+        {{ user.username|first|upper }}
+      </div>
+      {% endif %}
+      <div class="header-user-text">
+        <span class="header-welcome">Administrateur</span>
+        <span class="header-username">{{ user.username }} 🛡️</span>
+        <span class="header-badge badge-admin">Admin</span>
+      </div>
+      <div class="header-admin-actions">
+        <a
+          href="/admin/models_app/morceau/?statut=en_attente"
+          class="btn btn-outline btn-sm"
+        >
+          ⏳ Morceaux en attente
+        </a>
+        <a
+          href="/admin/models_app/video/?statut=en_attente"
+          class="btn btn-outline btn-sm"
+        >
+          ⏳ Vidéos en attente
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+{% endif %}

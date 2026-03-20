@@ -1,0 +1,50 @@
+{% load static %}
+<nav class="navbar navbar-admin">
+  <a href="{% url 'accueil' %}" class="navbar-logo"> 🎵 Badju's Records </a>
+
+  <ul class="navbar-links">
+    <li><a href="{% url 'accueil' %}">Accueil</a></li>
+    <li><a href="{% url 'top100' %}">Top 100</a></li>
+    <li><a href="{% url 'badju_tv' %}">Badju TV</a></li>
+    <li><a href="{% url 'liste_artistes' %}">Artistes</a></li>
+  </ul>
+
+  <div class="navbar-auth">
+    <a href="{% url 'recalculer_classement' %}" class="btn btn-outline">
+      🔄 Recalculer classement
+    </a>
+    <div class="navbar-user">
+      {% if user.avatar %}
+      <img src="{{ user.avatar.url }}" alt="avatar" class="navbar-avatar" />
+      {% else %}
+      <div class="navbar-avatar-placeholder navbar-avatar-admin">
+        {{ user.username|first|upper }}
+      </div>
+      {% endif %}
+      <div class="navbar-dropdown">
+        <span class="navbar-username">{{ user.username }} 🛡️</span>
+        <ul class="dropdown-menu">
+          <li><a href="/admin/">🛡️ Administration</a></li>
+          <li>
+            <a href="/admin/models_app/morceau/?statut=en_attente"
+              >⏳ Morceaux en attente</a
+            >
+          </li>
+          <li>
+            <a href="/admin/models_app/video/?statut=en_attente"
+              >⏳ Vidéos en attente</a
+            >
+          </li>
+          <li class="dropdown-divider"></li>
+          <li><a href="{% url 'modifier_profil' %}">✏️ Modifier profil</a></li>
+          <li class="dropdown-divider"></li>
+          <li>
+            <a href="{% url 'deconnexion' %}" class="dropdown-logout"
+              >🚪 Déconnexion</a
+            >
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
