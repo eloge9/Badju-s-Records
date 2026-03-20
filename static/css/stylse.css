@@ -1039,6 +1039,243 @@ textarea {
 }
 
 /* ─────────────────────────────────────────────
+   MODAL PUBLICITÉ
+───────────────────────────────────────────── */
+.modal-pub {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-pub-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+}
+
+.modal-pub-content {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-pub-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
+.modal-pub-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+.modal-pub-body {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.pub-container {
+  width: 100%;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pub-content {
+  width: 100%;
+  text-align: center;
+}
+
+.pub-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+}
+
+.pub-video {
+  width: 100%;
+  max-height: 300px;
+  border-radius: var(--radius-md);
+}
+
+.pub-link {
+  display: inline-block;
+  margin-top: 1rem;
+  color: var(--accent-gold);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.pub-link:hover {
+  text-decoration: underline;
+}
+
+.pub-placeholder-default {
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.pub-placeholder-default h4 {
+  color: var(--accent-gold);
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.pub-placeholder-default p {
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+}
+
+.pub-animation {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  font-size: 2rem;
+}
+
+.pub-note {
+  color: var(--accent-gold);
+  animation: pubNoteBounce 1.5s ease-in-out infinite;
+}
+
+.pub-note:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.pub-note:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+@keyframes pubNoteBounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.countdown-container {
+  text-align: center;
+  padding: 1.5rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.countdown-timer {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  margin-bottom: 0.5rem;
+  font-family: var(--font-title);
+}
+
+.countdown-text {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.modal-pub-footer {
+  padding: 1.5rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.modal-pub-footer .btn {
+  flex: 1;
+}
+
+.modal-pub-footer .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal-pub-content {
+    width: 95%;
+    margin: 1rem;
+  }
+
+  .modal-pub-body {
+    padding: 1.5rem;
+  }
+
+  .countdown-timer {
+    font-size: 2.5rem;
+  }
+
+  .modal-pub-footer {
+    flex-direction: column;
+  }
+
+  .modal-pub-footer .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .modal-pub-header,
+  .modal-pub-body,
+  .modal-pub-footer {
+    padding: 1rem;
+  }
+
+  .pub-container {
+    min-height: 200px;
+  }
+
+  .countdown-timer {
+    font-size: 2rem;
+  }
+}
+
+/* ─────────────────────────────────────────────
    FOOTER
 ───────────────────────────────────────────── */
 .footer {

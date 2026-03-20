@@ -1,0 +1,401 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ action }} une vidéo - Badju's Records{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.form-header h1 {
+  font-size: 2rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  font-family: var(--font-title);
+}
+
+.form-header p {
+  color: var(--text-muted);
+}
+
+.form-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 3rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: var(--transition);
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-help {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.radio-group {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1rem;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.radio-option input[type="radio"] {
+  width: auto;
+  margin: 0;
+}
+
+.file-upload {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  text-align: center;
+  transition: var(--transition);
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.file-upload:hover {
+  border-color: var(--accent-gold);
+  background: var(--bg-secondary);
+}
+
+.file-upload.has-file {
+  border-style: solid;
+  border-color: var(--accent-gold);
+}
+
+.upload-icon {
+  font-size: 3rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.upload-text {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.upload-hint {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.btn-submit {
+  background: var(--accent-gold);
+  color: var(--bg-primary);
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-submit:hover {
+  background: var(--accent-gold-hover);
+  transform: translateY(-2px);
+}
+
+.btn-cancel {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: 1rem 2rem;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-cancel:hover {
+  background: var(--bg-card);
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.error {
+  color: var(--accent-red);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.youtube-input {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .form-container {
+    padding: 2rem;
+  }
+  
+  .radio-group {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="form-header">
+    <h1>📺 {{ action }} une vidéo</h1>
+    <p>Partagez votre vidéo avec la communauté Badju's Records</p>
+  </div>
+
+  <div class="form-container">
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <div class="form-group">
+        <label>Type de vidéo *</label>
+        <div class="radio-group">
+          <div class="radio-option">
+            <input type="radio" id="type_upload" name="type_video" value="upload" checked onchange="toggleVideoType('upload')">
+            <label for="type_upload">Upload de fichier</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" id="type_youtube" name="type_video" value="youtube" onchange="toggleVideoType('youtube')">
+            <label for="type_youtube">Lien YouTube</label>
+          </div>
+        </div>
+        {% if form.type_video.errors %}
+          <div class="error">{{ form.type_video.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="titre">Titre *</label>
+        <input 
+          type="text" 
+          id="titre" 
+          name="titre" 
+          value="{{ form.titre.value|default:'' }}"
+          required
+          placeholder="Titre de la vidéo"
+        >
+        {% if form.titre.errors %}
+          <div class="error">{{ form.titre.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea 
+          id="description" 
+          name="description" 
+          placeholder="Décrivez votre vidéo, le contexte, les participants..."
+        >{{ form.description.value|default:'' }}</textarea>
+        <div class="form-help">Maximum 500 caractères</div>
+        {% if form.description.errors %}
+          <div class="error">{{ form.description.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Upload de fichier -->
+      <div id="upload-section" class="form-group">
+        <label>Fichier vidéo *</label>
+        <div class="file-upload" onclick="document.getElementById('fichier_video').click()">
+          <input type="file" id="fichier_video" name="fichier_video" accept="video/*" style="display: none;" onchange="handleVideoSelect(this)" required>
+          <div class="upload-icon">📺</div>
+          <div class="upload-text" id="video-text">Cliquez pour ajouter le fichier vidéo</div>
+          <div class="upload-hint">Formats: MP4, WebM, MOV - Max 500MB</div>
+        </div>
+        {% if form.fichier_video.errors %}
+          <div class="error">{{ form.fichier_video.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Lien YouTube -->
+      <div id="youtube-section" class="form-group youtube-input">
+        <label for="lien_youtube">Lien YouTube *</label>
+        <input 
+          type="url" 
+          id="lien_youtube" 
+          name="lien_youtube" 
+          value="{{ form.lien_youtube.value|default:'' }}"
+          placeholder="https://youtube.com/watch?v=..."
+        >
+        <div class="form-help">Collez l'URL complète de la vidéo YouTube</div>
+        {% if form.lien_youtube.errors %}
+          <div class="error">{{ form.lien_youtube.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label>Miniature (optionnel)</label>
+        <div class="file-upload" onclick="document.getElementById('thumbnail').click()">
+          <input type="file" id="thumbnail" name="thumbnail" accept="image/*" style="display: none;" onchange="handleThumbnailSelect(this)">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text" id="thumbnail-text">Cliquez pour ajouter une miniature</div>
+          <div class="upload-hint">Formats: JPG, PNG - Max 5MB</div>
+        </div>
+        {% if form.thumbnail.errors %}
+          <div class="error">{{ form.thumbnail.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-submit">
+          📺 {{ action }} la vidéo
+        </button>
+        <a href="{% url 'dashboard' %}" class="btn-cancel">
+          Annuler
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function toggleVideoType(type) {
+  const uploadSection = document.getElementById('upload-section');
+  const youtubeSection = document.getElementById('youtube-section');
+  const videoInput = document.getElementById('fichier_video');
+  const youtubeInput = document.getElementById('lien_youtube');
+  
+  if (type === 'upload') {
+    uploadSection.style.display = 'block';
+    youtubeSection.style.display = 'none';
+    videoInput.required = true;
+    youtubeInput.required = false;
+  } else {
+    uploadSection.style.display = 'none';
+    youtubeSection.style.display = 'block';
+    videoInput.required = false;
+    youtubeInput.required = true;
+  }
+}
+
+function handleVideoSelect(input) {
+  const file = input.files[0];
+  const uploadDiv = input.parentElement;
+  const textElement = document.getElementById('video-text');
+  
+  if (file) {
+    // Vérifier la taille (500MB max)
+    if (file.size > 500 * 1024 * 1024) {
+      alert('La vidéo ne doit pas dépasser 500MB');
+      input.value = '';
+      return;
+    }
+    
+    // Vérifier le type
+    const validTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'];
+    if (!validTypes.includes(file.type)) {
+      alert('Veuillez sélectionner un fichier vidéo valide (MP4, WebM, MOV)');
+      input.value = '';
+      return;
+    }
+    
+    uploadDiv.classList.add('has-file');
+    textElement.textContent = `📺 ${file.name}`;
+  }
+}
+
+function handleThumbnailSelect(input) {
+  const file = input.files[0];
+  const uploadDiv = input.parentElement;
+  const textElement = document.getElementById('thumbnail-text');
+  
+  if (file) {
+    // Vérifier la taille (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('L\'image ne doit pas dépasser 5MB');
+      input.value = '';
+      return;
+    }
+    
+    // Vérifier le type
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
+      alert('Veuillez sélectionner une image valide (JPG, PNG)');
+      input.value = '';
+      return;
+    }
+    
+    uploadDiv.classList.add('has-file');
+    textElement.textContent = `📷 ${file.name}`;
+  }
+}
+
+// Limiter la description à 500 caractères
+document.getElementById('description').addEventListener('input', function(e) {
+  if (e.target.value.length > 500) {
+    e.target.value = e.target.value.substring(0, 500);
+  }
+});
+
+// Valider l'URL YouTube
+document.getElementById('lien_youtube').addEventListener('input', function(e) {
+  const url = e.target.value;
+  const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)/;
+  
+  if (url && !youtubeRegex.test(url)) {
+    e.target.setCustomValidity('Veuillez entrer une URL YouTube valide');
+  } else {
+    e.target.setCustomValidity('');
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,455 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Devenir Artiste - Badju's Records{% endblock %}
+
+{% block extra_css %}
+<style>
+  .artiste-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .artiste-header h1 {
+    font-size: 2.5rem;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-family: var(--font-title);
+  }
+
+  .artiste-header p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .benefits-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+  }
+
+  .benefit-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    text-align: center;
+    transition: var(--transition);
+  }
+
+  .benefit-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--accent-gold);
+  }
+
+  .benefit-icon {
+    font-size: 3rem;
+    color: var(--accent-gold);
+    margin-bottom: 1rem;
+  }
+
+  .benefit-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .benefit-desc {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  .form-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 3rem;
+  }
+
+  .form-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .form-header h2 {
+    font-size: 1.8rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-family: var(--font-title);
+  }
+
+  .form-header p {
+    color: var(--text-muted);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: var(--transition);
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+  }
+
+  .form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+
+  .form-help {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+  }
+
+  .photo-upload {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-md);
+    padding: 2rem;
+    text-align: center;
+    transition: var(--transition);
+    cursor: pointer;
+  }
+
+  .photo-upload:hover {
+    border-color: var(--accent-gold);
+    background: var(--bg-secondary);
+  }
+
+  .photo-upload.has-file {
+    border-style: solid;
+    border-color: var(--accent-gold);
+  }
+
+  .upload-icon {
+    font-size: 3rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+
+  .upload-text {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .upload-hint {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+
+  .btn-submit {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .btn-submit:hover {
+    background: var(--accent-gold-hover);
+    transform: translateY(-2px);
+  }
+
+  .btn-cancel {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 1rem 2rem;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-cancel:hover {
+    background: var(--bg-card);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+  }
+
+  .genre-checkbox:hover {
+    border-color: var(--accent-gold);
+    background: var(--bg-secondary);
+  }
+
+  .genre-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-gold);
+  }
+
+  .genre-checkbox.checked {
+    background: var(--accent-gold);
+    border-color: var(--accent-gold);
+  }
+
+  .genre-checkbox.checked label {
+    color: var(--bg-primary);
+  }
+
+  @media (max-width: 768px) {
+    .artiste-header h1 {
+      font-size: 2rem;
+    }
+
+    .benefits-container {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .form-container {
+      padding: 2rem;
+    }
+
+    .form-row {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .form-actions {
+      flex-direction: column;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="artiste-header">
+    <h1>🎤 Devenir Artiste</h1>
+    <p>Transformez votre passion en carrière sur Badju's Records</p>
+  </div>
+
+  <div class="benefits-container">
+    <div class="benefit-card">
+      <div class="benefit-icon">🎵</div>
+      <div class="benefit-title">Upload illimité</div>
+      <div class="benefit-desc">Partagez vos morceaux et vidéos avec la communauté</div>
+    </div>
+
+    <div class="benefit-card">
+      <div class="benefit-icon">📊</div>
+      <div class="benefit-title">Statistiques détaillées</div>
+      <div class="benefit-desc">Suivez vos performances et votre progression</div>
+    </div>
+
+    <div class="benefit-card">
+      <div class="benefit-icon">🏆</div>
+      <div class="benefit-title">Classement</div>
+      <div class="benefit-desc">Accédez au Top 100 et gagnez des points</div>
+    </div>
+
+    <div class="benefit-card">
+      <div class="benefit-icon">🌟</div>
+      <div class="benefit-title">Visibilité</div>
+      <div class="benefit-desc">Promotion automatique de vos œuvres</div>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <div class="form-header">
+      <h2>Créer votre profil artiste</h2>
+      <p>Remplissez les informations ci-dessous pour devenir artiste</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nom_artiste">Nom d'artiste *</label>
+          <input type="text" id="nom_artiste" name="nom_artiste" value="{{ form.nom_artiste.value|default:'' }}"
+            required placeholder="Ex: Badju">
+          {% if form.nom_artiste.errors %}
+          <div class="form-help" style="color: var(--accent-red);">
+            {{ form.nom_artiste.errors.0 }}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label>Genres musicaux</label>
+          <div class="genres-grid"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin-bottom: 1rem;">
+            {% for genre_code, genre_label in genres %}
+            <div class="genre-checkbox"
+              style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-sm); transition: var(--transition); cursor: pointer;">
+              <input type="checkbox" id="genre_{{ genre_code }}" name="genres" value="{{ genre_code }}"
+                style="width: auto; margin: 0;" onchange="toggleGenreStyle(this)">
+              <label for="genre_{{ genre_code }}" style="margin: 0; cursor: pointer; color: var(--text-primary);">
+                {{ genre_label }}
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="form-help">Sélectionnez les genres que vous pratiquez (laissez vide si non précisé)</div>
+          {% if form.genres.errors %}
+          <div class="form-help" style="color: var(--accent-red);">
+            {{ form.genres.errors.0 }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="bio">Biographie</label>
+        <textarea id="bio" name="bio"
+          placeholder="Parlez-nous de vous, de votre musique, vos inspirations...">{{ form.bio.value|default:'' }}</textarea>
+        <div class="form-help">Maximum 500 caractères</div>
+        {% if form.bio.errors %}
+        <div class="form-help" style="color: var(--accent-red);">
+          {{ form.bio.errors.0 }}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="ville">Ville</label>
+          <input type="text" id="ville" name="ville" value="{{ form.ville.value|default:'' }}" placeholder="Ex: Lomé">
+          {% if form.ville.errors %}
+          <div class="form-help" style="color: var(--accent-red);">
+            {{ form.ville.errors.0 }}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="contact">Contact public</label>
+          <input type="text" id="contact" name="contact" value="{{ form.contact.value|default:'' }}"
+            placeholder="Email, téléphone, réseaux sociaux...">
+          <div class="form-help">Comment vos fans peuvent vous contacter</div>
+          {% if form.contact.errors %}
+          <div class="form-help" style="color: var(--accent-red);">
+            {{ form.contact.errors.0 }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Photo de profil</label>
+        <div class="photo-upload" onclick="document.getElementById('photo').click()">
+          <input type="file" id="photo" name="photo" accept="image/*" style="display: none;"
+            onchange="handlePhotoSelect(this)">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text" id="upload-text">Cliquez pour ajouter une photo</div>
+          <div class="upload-hint">Formats: JPG, PNG - Max 5MB</div>
+        </div>
+        {% if form.photo.errors %}
+        <div class="form-help" style="color: var(--accent-red);">
+          {{ form.photo.errors.0 }}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-submit">
+          🎤 Devenir Artiste
+        </button>
+        <a href="{% url 'mon_espace' %}" class="btn-cancel">
+          Annuler
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function handlePhotoSelect(input) {
+    const file = input.files[0];
+    const uploadDiv = document.querySelector('.photo-upload');
+    const uploadText = document.getElementById('upload-text');
+
+    if (file) {
+      // Vérifier la taille
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La photo ne doit pas dépasser 5MB');
+        input.value = '';
+        return;
+      }
+
+      // Vérifier le type
+      if (!file.type.match('image.*')) {
+        alert('Veuillez sélectionner une image valide');
+        input.value = '';
+        return;
+      }
+
+      uploadDiv.classList.add('has-file');
+      uploadText.textContent = `📷 ${file.name}`;
+    }
+  }
+
+  function toggleGenreStyle(checkbox) {
+    const genreDiv = checkbox.parentElement;
+    if (checkbox.checked) {
+      genreDiv.style.background = 'var(--accent-gold)';
+      genreDiv.style.borderColor = 'var(--accent-gold)';
+      genreDiv.querySelector('label').style.color = 'var(--bg-primary)';
+    } else {
+      genreDiv.style.background = '';
+      genreDiv.style.borderColor = 'var(--border)';
+      genreDiv.querySelector('label').style.color = 'var(--text-primary)';
+    }
+  }
+
+  // Limiter la bio à 500 caractères
+  document.getElementById('bio').addEventListener('input', function (e) {
+    if (e.target.value.length > 500) {
+      e.target.value = e.target.value.substring(0, 500);
+    }
+  });
+</script>
+{% endblock %}

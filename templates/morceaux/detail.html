@@ -1,0 +1,476 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ morceau.titre }} - {{ morceau.artiste.nom_artiste }} | Badju's Records{% endblock %}
+
+{% block extra_css %}
+<style>
+  .morceau-detail {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 3rem;
+    margin-bottom: 3rem;
+  }
+
+  .morceau-cover {
+    position: sticky;
+    top: 100px;
+    height: fit-content;
+  }
+
+  .cover-image {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .morceau-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .morceau-header h1 {
+    font-size: 2.5rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .morceau-artist {
+    font-size: 1.3rem;
+    color: var(--accent-gold);
+    margin-bottom: 1rem;
+  }
+
+  .morceau-meta {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .morceau-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .audio-player {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .audio-controls {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .play-btn-main {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--accent-gold);
+    border: none;
+    color: var(--bg-primary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .play-btn-main:hover {
+    background: var(--accent-gold-hover);
+    transform: scale(1.05);
+  }
+
+  .audio-progress {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: var(--accent-gold);
+    width: 0%;
+    transition: width 0.1s;
+  }
+
+  .morceau-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent-gold);
+    font-family: var(--font-title);
+  }
+
+  .stat-label {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+  }
+
+  .vote-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .vote-btn {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .vote-btn:hover:not(:disabled) {
+    background: var(--accent-gold-hover);
+    transform: translateY(-2px);
+  }
+
+  .vote-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .autres-morceaux {
+    margin-top: 3rem;
+  }
+
+  .autres-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .autres-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: var(--transition);
+    cursor: pointer;
+  }
+
+  .autres-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .autres-cover {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+  }
+
+  .autres-info {
+    padding: 1rem;
+  }
+
+  .autres-titre {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .autres-artiste {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 768px) {
+    .morceau-detail {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    .morceau-cover {
+      position: static;
+      max-width: 300px;
+      margin: 0 auto;
+    }
+
+    .morceau-header h1 {
+      font-size: 2rem;
+    }
+
+    .morceau-actions {
+      justify-content: center;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="morceau-detail">
+    <!-- Pochette -->
+    <div class="morceau-cover">
+      {% if morceau.pochette %}
+      <img src="{{ morceau.pochette.url }}" alt="{{ morceau.titre }}" class="cover-image">
+      {% else %}
+      <img src="{% static 'img/default-cover.jpg' %}" alt="{{ morceau.titre }}" class="cover-image">
+      {% endif %}
+    </div>
+
+    <!-- Informations -->
+    <div class="morceau-info">
+      <div class="morceau-header">
+        <h1>{{ morceau.titre }}</h1>
+        <div class="morceau-artist">
+          <a href="{% url 'detail_artiste' morceau.artiste.id %}">
+            {{ morceau.artiste.nom_artiste }}
+          </a>
+        </div>
+        <div class="morceau-meta">
+          <span>🎵 {{ morceau.get_genre_display }}</span>
+          <span>📅 {{ morceau.created_at|date:"d/m/Y" }}</span>
+          <span>⏱️ {{ morceau.duree|default:"—" }}</span>
+        </div>
+      </div>
+
+      <!-- Lecteur audio -->
+      <div class="audio-player">
+        <div class="audio-controls">
+          <button class="play-btn-main" onclick="playMorceau({{ morceau.id }})">
+            ▶
+          </button>
+          <div class="audio-progress">
+            <div class="progress-bar" id="main-progress"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="morceau-actions">
+        <button class="btn btn-gold" onclick="playMorceau({{ morceau.id }})">
+          ▶ Écouter
+        </button>
+        <button class="btn btn-outline"
+          onclick="ouvrirModalTelechargement({{ morceau.id }}, {% if pub %}{ 'type': 'image', 'image_url': '{{ pub.image.url }}' }{% endif %})">
+          ⬇ Télécharger
+        </button>
+        <button class="btn btn-outline" onclick="partagerMorceau({{ morceau.id }})">
+          🔗 Partager
+        </button>
+      </div>
+
+      <!-- Statistiques -->
+      <div class="morceau-stats">
+        <div class="stat-card">
+          <div class="stat-number">{{ morceau.points }}</div>
+          <div class="stat-label">Points</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ morceau.nb_votes }}</div>
+          <div class="stat-label">Votes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ morceau.nb_telechargements }}</div>
+          <div class="stat-label">Téléchargements</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ morceau.nb_vues }}</div>
+          <div class="stat-label">Vues</div>
+        </div>
+      </div>
+
+      <!-- Vote -->
+      <div class="vote-section">
+        <h3>Soutenir ce morceau</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+          Votez pour ce morceau et aidez-le à grimper dans le classement !
+        </p>
+        <button class="vote-btn" id="vote-btn-{{ morceau.id }}" onclick="voterPourMorceau({{ morceau.id }})" {% if
+          deja_vote %} disabled{% endif %}>
+          {% if deja_vote %}
+          ✓ Déjà voté
+          {% else %}
+          👍 Voter (+5 points)
+          {% endif %}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Autres morceaux du même artiste -->
+  {% if autres %}
+  <div class="autres-morceaux">
+    <h2>Autres morceaux de {{ morceau.artiste.nom_artiste }}</h2>
+    <div class="autres-grid">
+      {% for autre in autres %}
+      <div class="autres-card" onclick="jouerAutreMorceau({{ autre.id }})">
+        {% if autre.pochette %}
+        <img src="{{ autre.pochette.url }}" alt="{{ autre.titre }}" class="autres-cover">
+        {% else %}
+        <img src="{% static 'img/default-cover.jpg' %}" alt="{{ autre.titre }}" class="autres-cover">
+        {% endif %}
+        <div class="autres-info">
+          <div class="autres-titre">{{ autre.titre }}</div>
+          <div class="autres-artiste">{{ autre.artiste.nom_artiste }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+  // Données du morceau actuel
+  window.currentMorceau = {
+    id: {{ morceau.id }},
+  titre: "{{ morceau.titre|escapejs }}",
+    artiste: { nom_artiste: "{{ morceau.artiste.nom_artiste|escapejs }}" },
+  pochette: {% if morceau.pochette %} "{{ morceau.pochette.url }}"{% else %} "{% static 'img/default-cover.jpg' %}"{% endif %},
+  fichier_mp3: "{{ morceau.fichier_mp3.url }}"
+  };
+
+  // Playlist des autres morceaux
+  window.playlistData = [
+    {% for m in autres %}
+  {
+    id: { { m.id } },
+    titre: "{{ m.titre|escapejs }}",
+      artiste: { nom_artiste: "{{ m.artiste.nom_artiste|escapejs }}" },
+    pochette: {% if m.pochette %} "{{ m.pochette.url }}"{% else %} "{% static 'img/default-cover.jpg' %}"{% endif %},
+    fichier_mp3: "{{ m.fichier_mp3.url }}"
+  } {% if not forloop.last %}, {% endif %}
+  {% endfor %}
+  ];
+
+  function jouerAutreMorceau(morceauId) {
+    // Trouver le morceau dans la playlist
+    const morceau = window.playlistData.find(m => m.id === morceauId);
+    if (morceau && window.miniPlayer) {
+      window.miniPlayer.loadMorceau(morceau, window.playlistData);
+      window.miniPlayer.play();
+    }
+  }
+
+  function voterPourMorceau(morceauId) {
+    fetch(`/engagement/voter/${morceauId}/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': getCsrfToken()
+      },
+      body: ''
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.succes) {
+          const btn = document.getElementById('vote-btn-' + morceauId);
+          btn.innerHTML = '✓ Déjà voté';
+          btn.disabled = true;
+
+          // Mettre à jour les points affichés
+          const pointsElements = document.querySelectorAll('.stat-number');
+          if (pointsElements[0]) {
+            pointsElements[0].textContent = data.points;
+          }
+
+          // Notification
+          showNotification('Vote enregistré avec succès !', 'success');
+        } else {
+          showNotification(data.message || 'Erreur lors du vote', 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Erreur:', error);
+        showNotification('Une erreur est survenue', 'error');
+      });
+  }
+
+  function partagerMorceau(morceauId) {
+    const url = window.location.href;
+
+    if (navigator.share) {
+      navigator.share({
+        title: document.title,
+        url: url
+      });
+    } else {
+      // Copier dans le presse-papiers
+      navigator.clipboard.writeText(url).then(() => {
+        showNotification('Lien copié dans le presse-papiers !', 'success');
+      });
+    }
+  }
+
+  function getCsrfToken() {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+      const parts = cookie.trim().split('=');
+      if (parts[0] === 'csrftoken') {
+        return decodeURIComponent(parts[1]);
+      }
+    }
+    return '';
+  }
+
+  function showNotification(message, type) {
+    type = type || 'info';
+
+    // Créer une notification temporaire
+    const notification = document.createElement('div');
+    notification.className = 'message message-' + type;
+    notification.innerHTML = message + '<button class="message-close" onclick="this.parentElement.remove()">✕</button>';
+
+    // Ajouter au conteneur de messages
+    let container = document.querySelector('.messages-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.className = 'messages-container';
+      container.style.cssText = 'position: fixed; top: calc(var(--navbar-height) + 1rem); right: 1rem; z-index: 3000; display: flex; flex-direction: column; gap: 0.75rem; max-width: 380px;';
+      document.body.appendChild(container);
+    }
+
+    container.appendChild(notification);
+
+    // Auto-suppression après 5 secondes
+    setTimeout(() => {
+      if (notification.parentElement) {
+        notification.remove();
+      }
+    }, 5000);
+  }
+</script>
+{% endblock %}

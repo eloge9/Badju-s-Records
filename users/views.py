@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login, logout
 from django.contrib import messages
+from django.contrib.auth.models import User
+from models_app.models import ProfilArtiste, Morceau, Vote, Telechargement
 from .forms import (
     InscriptionForm,
     ConnexionForm,
@@ -161,7 +163,10 @@ def devenir_artiste(request):
     else:
         form = CreerProfilArtisteForm()
 
-    return render(request, 'users/devenir_artiste.html', {'form': form})
+    return render(request, 'users/devenir_artiste.html', {
+        'form': form,
+        'genres': Morceau.GENRES
+    })
 
 
 # ─────────────────────────────────────────────

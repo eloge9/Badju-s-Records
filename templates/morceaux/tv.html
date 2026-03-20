@@ -1,0 +1,436 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Badju TV - Vidéos | Badju's Records{% endblock %}
+
+{% block extra_css %}
+<style>
+  .tv-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .tv-header h1 {
+    font-size: 3rem;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-family: var(--font-title);
+  }
+
+  .tv-header p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+  }
+
+  .filtre-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .filtre-input {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    color: var(--text-primary);
+    min-width: 300px;
+  }
+
+  .filtre-input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+  }
+
+  .btn-filtre {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .btn-filtre:hover {
+    background: var(--accent-gold-hover);
+  }
+
+  .videos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+  }
+
+  .video-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: var(--transition);
+    cursor: pointer;
+  }
+
+  .video-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--accent-gold);
+  }
+
+  .video-thumbnail {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: var(--bg-secondary);
+    overflow: hidden;
+  }
+
+  .video-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: var(--transition);
+  }
+
+  .video-card:hover .video-overlay {
+    opacity: 1;
+  }
+
+  .play-button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--accent-gold);
+    border: none;
+    color: var(--bg-primary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .play-button:hover {
+    background: var(--accent-gold-hover);
+    transform: scale(1.1);
+  }
+
+  .video-duration {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 0.5rem;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .video-info {
+    padding: 1.5rem;
+  }
+
+  .video-titre {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+  }
+
+  .video-artiste {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  .video-artiste a {
+    color: var(--accent-gold);
+    text-decoration: none;
+  }
+
+  .video-artiste a:hover {
+    text-decoration: underline;
+  }
+
+  .video-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .video-views {
+    color: var(--accent-gold);
+    font-weight: 600;
+  }
+
+  .video-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .video-modal.active {
+    display: flex;
+  }
+
+  .modal-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .modal-video {
+    width: 100%;
+    height: auto;
+    max-height: 80vh;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: var(--transition);
+    z-index: 10;
+  }
+
+  .modal-close:hover {
+    background: var(--accent-red);
+  }
+
+  .empty-videos {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-muted);
+  }
+
+  .empty-videos i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  @media (max-width: 768px) {
+    .tv-header h1 {
+      font-size: 2rem;
+    }
+
+    .filtre-input {
+      min-width: 250px;
+    }
+
+    .videos-grid {
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .video-info {
+      padding: 1rem;
+    }
+
+    .modal-content {
+      max-width: 95vw;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="tv-header">
+    <h1>📺 Badju TV</h1>
+    <p>Découvrez les vidéos de la musique togolaise</p>
+  </div>
+
+  <div class="filtre-container">
+    <form method="GET" style="display: flex; gap: 0.5rem; align-items: center;">
+      <input type="text" name="recherche" class="filtre-input"
+        placeholder="Rechercher une vidéo, un artiste, un genre..." value="{{ recherche }}">
+      <button type="submit" class="btn-filtre">🔍 Rechercher</button>
+      {% if recherche %}
+      <a href="{% url 'badju_tv' %}" style="color: var(--text-muted);">✕</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="videos-grid">
+    {% if videos %}
+    {% for video in videos %}
+    <div class="video-card" onclick="jouerVideo({{ video.id }})">
+      <div class="video-thumbnail">
+        {% if video.thumbnail %}
+        <img src="{{ video.thumbnail.url }}" alt="{{ video.titre }}">
+        {% else %}
+        <div
+          style="width: 100%; height: 100%; background: linear-gradient(135deg, var(--accent-gold), var(--bg-secondary)); display: flex; align-items: center; justify-content: center;">
+          <span style="font-size: 3rem; color: white;">🎵</span>
+        </div>
+        {% endif %}
+
+        <div class="video-overlay">
+          <button class="play-button">▶</button>
+        </div>
+
+        <div class="video-duration">
+          {% if video.duree %}{{ video.duree }}{% else %}--:--{% endif %}
+        </div>
+      </div>
+
+      <div class="video-info">
+        <div class="video-titre">{{ video.titre }}</div>
+        <div class="video-artiste">
+          de <a href="{% url 'detail_artiste' video.artiste.id %}">{{ video.artiste.nom_artiste }}</a>
+        </div>
+        <div class="video-meta">
+          <span class="video-views">👁 {{ video.nb_vues }} vues</span>
+          <span>📅 {{ video.created_at|date:"d/m/Y" }}</span>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-videos" style="grid-column: 1 / -1;">
+      <i>📺</i>
+      <h3>Aucune vidéo trouvée</h3>
+      <p>
+        {% if recherche %}
+        Aucune vidéo trouvée pour "{{ recherche }}".
+        <a href="{% url 'badju_tv' %}">Voir toutes les vidéos</a>
+        {% else %}
+        Aucune vidéo disponible pour le moment. Revenez plus tard !
+        {% endif %}
+      </p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal vidéo -->
+<div id="video-modal" class="video-modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="fermerModalVideo()">✕</button>
+    <video id="modal-video-player" class="modal-video" controls>
+      <source src="" type="video/mp4">
+      Votre navigateur ne supporte pas les vidéos.
+    </video>
+  </div>
+</div>
+
+<script>
+  // Données des vidéos
+  window.videosData = [
+    {% for video in videos %}
+  {
+    id: { { video.id } },
+    titre: "{{ video.titre|escapejs }}",
+      artiste: "{{ video.artiste.nom_artiste|escapejs }}",
+        fichier_video: "{{ video.fichier_video.url }}",
+          thumbnail: {% if video.thumbnail %} "{{ video.thumbnail.url }}"{% else %} null{% endif %}
+  } {% if not forloop.last %}, {% endif %}
+  {% endfor %}
+  ];
+
+  function jouerVideo(videoId) {
+    const video = window.videosData.find(v => v.id === videoId);
+    if (!video) return;
+
+    // Enregistrer la vue
+    fetch(`/engagement/vue-video/${videoId}/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': getCsrfToken()
+      },
+      body: ''
+    })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Vue enregistrée:', data);
+      })
+      .catch(error => {
+        console.error('Erreur:', error);
+      });
+
+    // Ouvrir la modal
+    const modal = document.getElementById('video-modal');
+    const videoPlayer = document.getElementById('modal-video-player');
+
+    videoPlayer.src = video.fichier_video;
+    modal.classList.add('active');
+    videoPlayer.play();
+  }
+
+  function fermerModalVideo() {
+    const modal = document.getElementById('video-modal');
+    const videoPlayer = document.getElementById('modal-video-player');
+
+    videoPlayer.pause();
+    videoPlayer.src = '';
+    modal.classList.remove('active');
+  }
+
+  // Fermer la modal avec la touche Échap
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      fermerModalVideo();
+    }
+  });
+
+  // Fermer la modal en cliquant sur le fond
+  document.getElementById('video-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) {
+      fermerModalVideo();
+    }
+  });
+
+  function getCsrfToken() {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+      const parts = cookie.trim().split('=');
+      if (parts[0] === 'csrftoken') {
+        return decodeURIComponent(parts[1]);
+      }
+    }
+    return '';
+  }
+</script>
+{% endblock %}

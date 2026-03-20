@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db.models import Q
 from models_app.models import (
     Morceau, Video, Publicite,
     ProfilArtiste, Vote, Telechargement
@@ -73,13 +74,21 @@ def detail_morceau(request, id):
 # ─────────────────────────────────────────────
 
 def badju_tv(request):
-    artiste_filtre = request.GET.get('artiste', '')
+    recherche = request.GET.get('recherche', '')
     videos = Video.objects.filter(statut='valide').order_by('-created_at')
-    if artiste_filtre:
-        videos = videos.filter(artiste__nom_artiste__icontains=artiste_filtre)
+    
+    if recherche:
+        # Recherche multi-critères
+        videos = videos.filter(
+            Q(titre__icontains=recherche) |
+            Q(artiste__nom_artiste__icontains=recherche) |
+            Q(morceau__genre__icontains=recherche) |
+            Q(morceau__genre_display__icontains=recherche)
+        ).distinct()
+    
     return render(request, 'morceaux/tv.html', {
-        'videos':          videos,
-        'artiste_filtre':  artiste_filtre,
+        'videos': videos,
+        'recherche': recherche,
     })
 
 
@@ -127,14 +136,26 @@ def ajouter_morceau(request):
     if request.method == 'POST':
         form = MorceauForm(request.POST, request.FILES)
         if form.is_valid():
-            morceau         = form.save(commit=False)
-            morceau.artiste = artiste
-            morceau.statut  = 'en_attente'
-            morceau.save()
-            messages.success(request, f"'{morceau.titre}' soumis avec succès. En attente de validation.")
-            return redirect('dashboard')
+            try:
+                morceau = form.save(commit=False)
+                morceau.artiste = artiste
+                morceau.statut = 'valide'  # Validé automatiquement
+                morceau.save()
+                
+                messages.success(
+                    request, 
+                    f"🎵 '{morceau.titre}' publié avec succès ! "
+                    "Votre morceau est maintenant disponible sur Badju's Records."
+                )
+                return redirect('dashboard')
+            except Exception as e:
+                messages.error(request, f"Une erreur est survenue: {str(e)}")
+                print(f"Erreur lors de la sauvegarde du morceau: {e}")
         else:
-            messages.error(request, "Veuillez corriger les erreurs.")
+            messages.error(request, "❌ Veuillez corriger les erreurs ci-dessous:")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"• {field}: {error}")
     else:
         form = MorceauForm()
 
@@ -216,12 +237,19 @@ def ajouter_video(request):
         if form.is_valid():
             video         = form.save(commit=False)
             video.artiste = artiste
-            video.statut  = 'en_attente'
+            video.statut  = 'valide'  # Validé automatiquement
             video.save()
-            messages.success(request, f"'{video.titre}' soumise avec succès. En attente de validation.")
+            messages.success(
+                request, 
+                f"🎬 '{video.titre}' publiée avec succès ! "
+                "Votre vidéo est maintenant disponible sur Badju's Records."
+            )
             return redirect('dashboard')
         else:
-            messages.error(request, "Veuillez corriger les erreurs.")
+            messages.error(request, "❌ Veuillez corriger les erreurs ci-dessous:")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"• {field}: {error}")
     else:
         form = VideoForm(artiste=artiste)
 

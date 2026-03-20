@@ -27,10 +27,8 @@
       {% endif %}
       <div class="navbar-dropdown">
         <span class="navbar-username">
-          {{ user.profil_artiste.nom_artiste }} {% if
-          user.profil_artiste.verified %}
-          <span class="badge-verified" title="Artiste vérifié">✓</span>
-          {% endif %}
+          {{ user.profil_artiste.nom_artiste }}{% if user.profil_artiste.verified %}<span class="badge-verified"
+            title="Artiste vérifié">✓</span>{% endif %}
         </span>
         <ul class="dropdown-menu">
           <li><a href="{% url 'dashboard' %}">🎵 Mon Dashboard</a></li>

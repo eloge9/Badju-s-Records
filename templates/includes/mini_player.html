@@ -1,7 +1,7 @@
 {% load static %}
 <div id="mini-player" class="mini-player hidden">
   <div class="player-left">
-    <img id="player-pochette" src="" alt="pochette" />
+    <img id="player-pochette" src="{% static 'img/default-cover.jpg' %}" alt="pochette" />
     <div class="player-info">
       <span id="player-titre">—</span>
       <span id="player-artiste">—</span>
@@ -9,37 +9,19 @@
   </div>
 
   <div class="player-controls">
-    <button onclick="playerPrev()" title="Précédent">⏮</button>
-    <button id="player-btn" onclick="playerToggle()" title="Play/Pause">
-      ▶
-    </button>
-    <button onclick="playerNext()" title="Suivant">⏭</button>
+    <button id="btn-prev" title="Précédent">⏮</button>
+    <button id="btn-play-pause" title="Play/Pause">▶</button>
+    <button id="btn-next" title="Suivant">⏭</button>
   </div>
 
   <div class="player-progress">
-    <span id="player-current">0:00</span>
-    <input
-      type="range"
-      id="player-bar"
-      value="0"
-      min="0"
-      max="100"
-      oninput="playerSeek(this.value)"
-    />
-    <span id="player-duration">0:00</span>
+    <span id="player-current-time">0:00</span>
+    <input type="range" id="player-progress" value="0" min="0" max="100" />
+    <span id="player-total-time">0:00</span>
   </div>
 
   <div class="player-volume">
-    🔊
-    <input
-      type="range"
-      id="player-vol"
-      value="80"
-      min="0"
-      max="100"
-      oninput="playerVolume(this.value)"
-    />
+    <span>🔊</span>
+    <input type="range" id="player-volume" value="70" min="0" max="100" />
   </div>
-
-  <audio id="audio-global"></audio>
 </div>
