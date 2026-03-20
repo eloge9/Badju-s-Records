@@ -5,6 +5,7 @@ urlpatterns = [
     path('',                                    views.accueil,           name='accueil'),
     path('top100/',                             views.top100,            name='top100'),
     path('morceau/<int:id>/',                   views.detail_morceau,    name='detail_morceau'),
+    path('video/<int:id>/',                     views.detail_video,      name='detail_video'),
     path('tv/',                                 views.badju_tv,          name='badju_tv'),
     path('dashboard/',                          views.dashboard_artiste, name='dashboard'),
     path('dashboard/ajouter-morceau/',          views.ajouter_morceau,   name='ajouter_morceau'),

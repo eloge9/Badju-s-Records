@@ -318,8 +318,8 @@
         <p style="color: var(--text-muted); margin-bottom: 1rem;">
           Votez pour ce morceau et aidez-le à grimper dans le classement !
         </p>
-        <button class="vote-btn" id="vote-btn-{{ morceau.id }}" onclick="voterPourMorceau({{ morceau.id }})" {% if
-          deja_vote %} disabled{% endif %}>
+        <button class="vote-btn" id="vote-btn-{{ morceau.id }}"
+          onclick="voterPourMorceau({{ morceau.id }}){% if deja_vote %}" disabled{% endif %}>
           {% if deja_vote %}
           ✓ Déjà voté
           {% else %}

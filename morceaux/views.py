@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.db.models import Q
 from models_app.models import (
     Morceau, Video, Publicite,
-    ProfilArtiste, Vote, Telechargement
+    ProfilArtiste, Vote, Telechargement, VueVideo, LikeVideo, CommentaireVideo
 )
 from .forms import MorceauForm, VideoForm
 
@@ -254,3 +254,47 @@ def ajouter_video(request):
         form = VideoForm(artiste=artiste)
 
     return render(request, 'morceaux/form_video.html', {'form': form})
+
+
+# ─────────────────────────────────────────────
+# DÉTAIL VIDÉO
+# ─────────────────────────────────────────────
+
+def detail_video(request, id):
+    video = get_object_or_404(Video, id=id, statut='valide')
+    videos_similaires = Video.objects.filter(
+        statut='valide'
+    ).exclude(id=id).order_by('-created_at')[:10]
+    
+    # Enregistrer la vue
+    session_id = request.session.session_key
+    if not session_id:
+        request.session.create()
+        session_id = request.session.session_key
+
+    deja_vue = VueVideo.objects.filter(video=video, session_id=session_id).exists()
+    if not deja_vue:
+        VueVideo.objects.create(
+            video      = video,
+            user       = request.user if request.user.is_authenticated else None,
+            session_id = session_id,
+        )
+        video.nb_vues += 1
+        video.save(update_fields=['nb_vues'])
+        if video.morceau:
+            video.morceau.points += 2
+            video.morceau.save(update_fields=['points'])
+
+    # Vérifier si déjà liké
+    deja_like = False
+    if request.user.is_authenticated:
+        deja_like = LikeVideo.objects.filter(video=video, user=request.user).exists()
+
+    commentaires = video.commentaires.filter(parent=None).order_by('-created_at')
+
+    return render(request, 'morceaux/detail_video.html', {
+        'video':            video,
+        'videos_similaires': videos_similaires,
+        'deja_like':        deja_like,
+        'commentaires':     commentaires,
+    })

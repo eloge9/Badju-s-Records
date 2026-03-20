@@ -567,6 +567,50 @@ class Publicite(models.Model):
 
     def clean(self):
         if not self.image and not self.video:
-            raise ValidationError(
-                "Une publicité doit avoir au moins une image ou une vidéo."
+            raise ValidationError('Une pub doit avoir une image ou une vidéo.')
+
+
+# ─────────────────────────────────────────────
+# LIKE VIDÉO
+# ─────────────────────────────────────────────
+
+class LikeVideo(models.Model):
+    video      = models.ForeignKey(Video, on_delete=models.CASCADE, related_name='likes')
+    user       = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'likes_video'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['video', 'user'],
+                name='un_like_par_user_par_video'
             )
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} ❤ {self.video.titre}"
+
+
+# ─────────────────────────────────────────────
+# COMMENTAIRE VIDÉO
+# ─────────────────────────────────────────────
+
+class CommentaireVideo(models.Model):
+    video      = models.ForeignKey(Video, on_delete=models.CASCADE, related_name='commentaires')
+    user       = models.ForeignKey(User, on_delete=models.CASCADE)
+    parent     = models.ForeignKey(
+                     'self',
+                     on_delete=models.CASCADE,
+                     null=True, blank=True,
+                     related_name='reponses'
+                 )
+    contenu    = models.TextField(max_length=1000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'commentaires_video'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} sur {self.video.titre}"
