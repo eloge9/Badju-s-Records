@@ -1,476 +1,636 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ morceau.titre }} - {{ morceau.artiste.nom_artiste }} | Badju's Records{% endblock %}
-
-{% block extra_css %}
-<style>
-  .morceau-detail {
-    display: grid;
-    grid-template-columns: 300px 1fr;
-    gap: 3rem;
-    margin-bottom: 3rem;
-  }
-
-  .morceau-cover {
-    position: sticky;
-    top: 100px;
-    height: fit-content;
-  }
-
-  .cover-image {
-    width: 100%;
-    aspect-ratio: 1;
-    object-fit: cover;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .morceau-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-  }
-
-  .morceau-header h1 {
-    font-size: 2.5rem;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-  }
-
-  .morceau-artist {
-    font-size: 1.3rem;
-    color: var(--accent-gold);
-    margin-bottom: 1rem;
-  }
-
-  .morceau-meta {
-    display: flex;
-    gap: 2rem;
-    flex-wrap: wrap;
-    color: var(--text-muted);
-    font-size: 0.9rem;
-  }
-
-  .morceau-actions {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .audio-player {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 2rem;
-    margin-bottom: 2rem;
-  }
-
-  .audio-controls {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .play-btn-main {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: var(--accent-gold);
-    border: none;
-    color: var(--bg-primary);
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: var(--transition);
-  }
-
-  .play-btn-main:hover {
-    background: var(--accent-gold-hover);
-    transform: scale(1.05);
-  }
-
-  .audio-progress {
-    flex: 1;
-    height: 6px;
-    background: var(--border);
-    border-radius: 3px;
-    overflow: hidden;
-  }
-
-  .progress-bar {
-    height: 100%;
-    background: var(--accent-gold);
-    width: 0%;
-    transition: width 0.1s;
-  }
-
-  .morceau-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-  }
-
-  .stat-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 1.5rem;
-    text-align: center;
-  }
-
-  .stat-number {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--accent-gold);
-    font-family: var(--font-title);
-  }
-
-  .stat-label {
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    margin-top: 0.5rem;
-  }
-
-  .vote-section {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 2rem;
-    margin-bottom: 2rem;
-  }
-
-  .vote-btn {
-    background: var(--accent-gold);
-    color: var(--bg-primary);
-    border: none;
-    padding: 1rem 2rem;
-    border-radius: var(--radius-md);
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .vote-btn:hover:not(:disabled) {
-    background: var(--accent-gold-hover);
-    transform: translateY(-2px);
-  }
-
-  .vote-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .autres-morceaux {
-    margin-top: 3rem;
-  }
-
-  .autres-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1.5rem;
-  }
-
-  .autres-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    transition: var(--transition);
-    cursor: pointer;
-  }
-
-  .autres-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .autres-cover {
-    width: 100%;
-    aspect-ratio: 1;
-    object-fit: cover;
-  }
-
-  .autres-info {
-    padding: 1rem;
-  }
-
-  .autres-titre {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .autres-artiste {
-    color: var(--text-muted);
-    font-size: 0.85rem;
-  }
-
-  @media (max-width: 768px) {
-    .morceau-detail {
-      grid-template-columns: 1fr;
-      gap: 2rem;
-    }
-
-    .morceau-cover {
-      position: static;
-      max-width: 300px;
-      margin: 0 auto;
-    }
-
-    .morceau-header h1 {
-      font-size: 2rem;
-    }
-
-    .morceau-actions {
-      justify-content: center;
-    }
-  }
-</style>
-{% endblock %}
+{% block title %}{{ morceau.titre }} — {{ morceau.artiste.nom_artiste }} | Badju's Records{% endblock %}
 
 {% block content %}
-<div class="main-content">
-  <div class="morceau-detail">
+<div class="detail-container">
+
+  <!-- ── SECTION PRINCIPALE ── -->
+  <div class="detail-main">
+
     <!-- Pochette -->
-    <div class="morceau-cover">
+    <div class="detail-cover">
       {% if morceau.pochette %}
-      <img src="{{ morceau.pochette.url }}" alt="{{ morceau.titre }}" class="cover-image">
+      <img src="{{ morceau.pochette.url }}" alt="{{ morceau.titre }}" class="detail-cover-img">
       {% else %}
-      <img src="{% static 'img/default-cover.jpg' %}" alt="{{ morceau.titre }}" class="cover-image">
+      <div class="detail-cover-placeholder">🎵</div>
+      {% endif %}
+
+      {% if morceau.rang %}
+      <div class="detail-rang">
+        {% if morceau.rang == 1 %}🥇
+        {% elif morceau.rang == 2 %}🥈
+        {% elif morceau.rang == 3 %}🥉
+        {% else %}#{{ morceau.rang }}
+        {% endif %}
+      </div>
       {% endif %}
     </div>
 
-    <!-- Informations -->
-    <div class="morceau-info">
-      <div class="morceau-header">
-        <h1>{{ morceau.titre }}</h1>
-        <div class="morceau-artist">
-          <a href="{% url 'detail_artiste' morceau.artiste.id %}">
-            {{ morceau.artiste.nom_artiste }}
-          </a>
-        </div>
-        <div class="morceau-meta">
-          <span>🎵 {{ morceau.get_genre_display }}</span>
-          <span>📅 {{ morceau.created_at|date:"d/m/Y" }}</span>
-          <span>⏱️ {{ morceau.duree|default:"—" }}</span>
-        </div>
-      </div>
+    <!-- Infos + actions -->
+    <div class="detail-infos">
 
-      <!-- Lecteur audio -->
-      <div class="audio-player">
-        <div class="audio-controls">
-          <button class="play-btn-main" onclick="playMorceau({{ morceau.id }})">
-            ▶
-          </button>
-          <div class="audio-progress">
-            <div class="progress-bar" id="main-progress"></div>
+      <!-- En-tête -->
+      <div class="detail-header">
+        <span class="detail-genre badge-genre">{{ morceau.get_genre_display }}</span>
+        <h1 class="detail-titre">{{ morceau.titre }}</h1>
+
+        <a href="{% url 'detail_artiste' morceau.artiste.id %}" class="detail-artiste-lien">
+          {% if morceau.artiste.photo %}
+          <img src="{{ morceau.artiste.photo.url }}" alt="{{ morceau.artiste.nom_artiste }}"
+            class="detail-artiste-avatar">
+          {% else %}
+          <div class="detail-artiste-avatar detail-artiste-placeholder">
+            {{ morceau.artiste.nom_artiste|first|upper }}
           </div>
+          {% endif %}
+          <span class="detail-artiste-nom">{{ morceau.artiste.nom_artiste }}</span>
+          {% if morceau.artiste.verified %}
+          <span class="badge-verified">✓</span>
+          {% endif %}
+        </a>
+
+        <div class="detail-meta">
+          <span>📅 {{ morceau.date_sortie|date:"d M Y" }}</span>
+          {% if morceau.duree %}
+          <span>⏱ {{ morceau.duree_formatee }}</span>
+          {% endif %}
         </div>
       </div>
 
-      <!-- Actions -->
-      <div class="morceau-actions">
-        <button class="btn btn-gold" onclick="playMorceau({{ morceau.id }})">
-          ▶ Écouter
+      <!-- ── LECTEUR ── -->
+      <div class="detail-player">
+        <button class="btn btn-gold btn-full detail-play-main" onclick="jouerMorceau({
+            id: {{ morceau.id }},
+            titre: '{{ morceau.titre|escapejs }}',
+            artiste: '{{ morceau.artiste.nom_artiste|escapejs }}',
+            pochette: '{% if morceau.pochette %}{{ morceau.pochette.url }}{% endif %}',
+            fichier: '{{ morceau.fichier_mp3.url }}'
+          })">
+          ▶ Écouter ce morceau
         </button>
-        <button class="btn btn-outline"
-          onclick="ouvrirModalTelechargement({{ morceau.id }}, {% if pub %}{ 'type': 'image', 'image_url': '{{ pub.image.url }}' }{% endif %})">
-          ⬇ Télécharger
-        </button>
-        <button class="btn btn-outline" onclick="partagerMorceau({{ morceau.id }})">
-          🔗 Partager
+        <button class="btn btn-ghost btn-full" onclick="jouerMorceau({
+            id: {{ morceau.id }},
+            titre: '{{ morceau.titre|escapejs }}',
+            artiste: '{{ morceau.artiste.nom_artiste|escapejs }}',
+            pochette: '{% if morceau.pochette %}{{ morceau.pochette.url }}{% endif %}',
+            fichier: '{{ morceau.fichier_mp3.url }}'
+          })">
+          ➕ Ajouter à la playlist
         </button>
       </div>
 
-      <!-- Statistiques -->
-      <div class="morceau-stats">
-        <div class="stat-card">
-          <div class="stat-number">{{ morceau.points }}</div>
-          <div class="stat-label">Points</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ morceau.nb_votes }}</div>
-          <div class="stat-label">Votes</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ morceau.nb_telechargements }}</div>
-          <div class="stat-label">Téléchargements</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ morceau.nb_vues }}</div>
-          <div class="stat-label">Vues</div>
-        </div>
-      </div>
+      <!-- ── ACTIONS ── -->
+      <div class="detail-actions">
 
-      <!-- Vote -->
-      <div class="vote-section">
-        <h3>Soutenir ce morceau</h3>
-        <p style="color: var(--text-muted); margin-bottom: 1rem;">
-          Votez pour ce morceau et aidez-le à grimper dans le classement !
-        </p>
-        <button class="vote-btn" id="vote-btn-{{ morceau.id }}"
-          onclick="voterPourMorceau({{ morceau.id }}){% if deja_vote %}" disabled{% endif %}>
+        {% if user.is_authenticated %}
+        <button id="btn-voter" class="btn {% if deja_vote %}btn-outline{% else %}btn-gold{% endif %}"
+          onclick="voter({{ morceau.id }})" {% if deja_vote %}disabled{% endif %}>
           {% if deja_vote %}
           ✓ Déjà voté
           {% else %}
-          👍 Voter (+5 points)
+          👍 Voter <span id="compteur-votes">({{ morceau.nb_votes }})</span>
           {% endif %}
         </button>
+        {% else %}
+        <a href="{% url 'connexion' %}" class="btn btn-gold">
+          👍 Voter ({{ morceau.nb_votes }})
+        </a>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+        <button class="btn btn-outline" onclick="ouvrirModalTelechargement({{ morceau.id }})">
+          ⬇ Télécharger
+        </button>
+        {% else %}
+        <a href="{% url 'connexion' %}" class="btn btn-outline">
+          ⬇ Télécharger
+        </a>
+        {% endif %}
+
+        <button class="btn btn-ghost" onclick="partagerMorceau()">
+          🔗 Partager
+        </button>
+
       </div>
+
+      <!-- ── STATS ── -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-number">{{ morceau.points }}</span>
+          <span class="stat-label">Points</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="nb-votes-stat">{{ morceau.nb_votes }}</span>
+          <span class="stat-label">Votes</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">{{ morceau.nb_telechargements }}</span>
+          <span class="stat-label">Téléchargements</span>
+        </div>
+        {% if morceau.rang %}
+        <div class="stat-card">
+          <span class="stat-number">#{{ morceau.rang }}</span>
+          <span class="stat-label">Classement</span>
+        </div>
+        {% endif %}
+      </div>
+
     </div>
   </div>
 
-  <!-- Autres morceaux du même artiste -->
+  <!-- ── AUTRES MORCEAUX DE L'ARTISTE ── -->
   {% if autres %}
-  <div class="autres-morceaux">
-    <h2>Autres morceaux de {{ morceau.artiste.nom_artiste }}</h2>
+  <div class="detail-autres">
+    <h2 class="section-title">
+      Autres morceaux de {{ morceau.artiste.nom_artiste }}
+    </h2>
     <div class="autres-grid">
       {% for autre in autres %}
-      <div class="autres-card" onclick="jouerAutreMorceau({{ autre.id }})">
-        {% if autre.pochette %}
-        <img src="{{ autre.pochette.url }}" alt="{{ autre.titre }}" class="autres-cover">
-        {% else %}
-        <img src="{% static 'img/default-cover.jpg' %}" alt="{{ autre.titre }}" class="autres-cover">
-        {% endif %}
-        <div class="autres-info">
-          <div class="autres-titre">{{ autre.titre }}</div>
-          <div class="autres-artiste">{{ autre.artiste.nom_artiste }}</div>
+      <div class="autre-card">
+        <div class="autre-card-image">
+          {% if autre.pochette %}
+          <img src="{{ autre.pochette.url }}" alt="{{ autre.titre }}">
+          {% else %}
+          <div class="autre-pochette-placeholder">🎵</div>
+          {% endif %}
+          <button class="autre-play-btn" onclick="jouerMorceau({
+                  id: {{ autre.id }},
+                  titre: '{{ autre.titre|escapejs }}',
+                  artiste: '{{ autre.artiste.nom_artiste|escapejs }}',
+                  pochette: '{% if autre.pochette %}{{ autre.pochette.url }}{% endif %}',
+                  fichier: '{{ autre.fichier_mp3.url }}'
+                })">▶
+          </button>
+        </div>
+        <div class="autre-card-info">
+          <a href="{% url 'detail_morceau' autre.id %}" class="autre-card-titre">
+            {{ autre.titre }}
+          </a>
+          <span class="autre-card-points">{{ autre.points }} pts</span>
         </div>
       </div>
       {% endfor %}
     </div>
   </div>
   {% endif %}
+
 </div>
 
+<!-- Toast partage -->
+<div id="toast-partage" class="toast hidden">🔗 Lien copié !</div>
+
+{% if user.is_authenticated %}
+<span id="user-connecte" style="display:none;"></span>
+{% endif %}
+
+{% endblock %}
+
+
+{% block extra_js %}
 <script>
-  // Données du morceau actuel
-  window.currentMorceau = {
-    id: {{ morceau.id }},
-  titre: "{{ morceau.titre|escapejs }}",
-    artiste: { nom_artiste: "{{ morceau.artiste.nom_artiste|escapejs }}" },
-  pochette: {% if morceau.pochette %} "{{ morceau.pochette.url }}"{% else %} "{% static 'img/default-cover.jpg' %}"{% endif %},
-  fichier_mp3: "{{ morceau.fichier_mp3.url }}"
-  };
 
-  // Playlist des autres morceaux
-  window.playlistData = [
-    {% for m in autres %}
-  {
-    id: { { m.id } },
-    titre: "{{ m.titre|escapejs }}",
-      artiste: { nom_artiste: "{{ m.artiste.nom_artiste|escapejs }}" },
-    pochette: {% if m.pochette %} "{{ m.pochette.url }}"{% else %} "{% static 'img/default-cover.jpg' %}"{% endif %},
-    fichier_mp3: "{{ m.fichier_mp3.url }}"
-  } {% if not forloop.last %}, {% endif %}
-  {% endfor %}
-  ];
+  // ─────────────────────────────────────────────
+  // VOTE
+  // ─────────────────────────────────────────────
 
-  function jouerAutreMorceau(morceauId) {
-    // Trouver le morceau dans la playlist
-    const morceau = window.playlistData.find(m => m.id === morceauId);
-    if (morceau && window.miniPlayer) {
-      window.miniPlayer.loadMorceau(morceau, window.playlistData);
-      window.miniPlayer.play();
-    }
-  }
+  function voter(morceauId) {
+    const csrf = getCsrfToken();
+    const btn = document.getElementById('btn-voter');
+    if (!btn) return;
 
-  function voterPourMorceau(morceauId) {
+    btn.disabled = true;
+    btn.textContent = '⏳...';
+
     fetch(`/engagement/voter/${morceauId}/`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'X-CSRFToken': getCsrfToken()
-      },
-      body: ''
+      headers: { 'X-CSRFToken': csrf },
     })
-      .then(response => response.json())
+      .then(r => r.json())
       .then(data => {
         if (data.succes) {
-          const btn = document.getElementById('vote-btn-' + morceauId);
-          btn.innerHTML = '✓ Déjà voté';
-          btn.disabled = true;
+          btn.textContent = '✓ Voté !';
+          btn.classList.remove('btn-gold');
+          btn.classList.add('btn-outline');
 
-          // Mettre à jour les points affichés
-          const pointsElements = document.querySelectorAll('.stat-number');
-          if (pointsElements[0]) {
-            pointsElements[0].textContent = data.points;
-          }
+          const stat = document.getElementById('nb-votes-stat');
+          const compteur = document.getElementById('compteur-votes');
+          if (stat) stat.textContent = data.nb_votes;
+          if (compteur) compteur.textContent = `(${data.nb_votes})`;
 
-          // Notification
-          showNotification('Vote enregistré avec succès !', 'success');
+          afficherToast('Vote enregistré ! +5 points 🎉', 'success');
         } else {
-          showNotification(data.message || 'Erreur lors du vote', 'error');
+          btn.textContent = '✓ Déjà voté';
+          btn.disabled = true;
+          afficherToast(data.message, 'info');
         }
       })
-      .catch(error => {
-        console.error('Erreur:', error);
-        showNotification('Une erreur est survenue', 'error');
+      .catch(() => {
+        btn.disabled = false;
+        btn.textContent = '👍 Voter';
+        afficherToast('Erreur, réessaie.', 'error');
       });
   }
 
-  function partagerMorceau(morceauId) {
-    const url = window.location.href;
+  // ─────────────────────────────────────────────
+  // TÉLÉCHARGEMENT
+  // pub désactivée temporairement
+  // ─────────────────────────────────────────────
 
+  let morceauIdEnCours = null;
+
+  function ouvrirModalTelechargement(morceauId) {
+    morceauIdEnCours = morceauId;
+    lancerTelechargement(morceauId, false);
+  }
+
+  function lancerTelechargement(morceauId, pubVue) {
+    const csrf = getCsrfToken();
+    const formData = new FormData();
+    formData.append('pub_vue', pubVue ? 'true' : 'false');
+
+    afficherToast('⏳ Préparation du téléchargement...', 'info');
+
+    fetch(`/engagement/telecharger/${morceauId}/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrf },
+      body: formData,
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.succes && data.url) {
+          const a = document.createElement('a');
+          a.href = data.url;
+          a.download = '';
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => document.body.removeChild(a), 1000);
+          afficherToast('⬇ Téléchargement démarré !', 'success');
+        } else {
+          afficherToast('Erreur lors du téléchargement.', 'error');
+        }
+      })
+      .catch(() => {
+        afficherToast('Erreur lors du téléchargement.', 'error');
+      });
+  }
+
+  // ─────────────────────────────────────────────
+  // PARTAGER
+  // ─────────────────────────────────────────────
+
+  function partagerMorceau() {
     if (navigator.share) {
       navigator.share({
         title: document.title,
-        url: url
+        url: window.location.href,
       });
     } else {
-      // Copier dans le presse-papiers
-      navigator.clipboard.writeText(url).then(() => {
-        showNotification('Lien copié dans le presse-papiers !', 'success');
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        afficherToast('🔗 Lien copié !', 'success');
       });
     }
   }
 
-  function getCsrfToken() {
-    const cookies = document.cookie.split(';');
-    for (let cookie of cookies) {
-      const parts = cookie.trim().split('=');
-      if (parts[0] === 'csrftoken') {
-        return decodeURIComponent(parts[1]);
-      }
-    }
-    return '';
-  }
+  // ─────────────────────────────────────────────
+  // TOAST
+  // ─────────────────────────────────────────────
 
-  function showNotification(message, type) {
-    type = type || 'info';
+  function afficherToast(message, type) {
+    document.querySelectorAll('.toast-dynamic').forEach(t => t.remove());
 
-    // Créer une notification temporaire
-    const notification = document.createElement('div');
-    notification.className = 'message message-' + type;
-    notification.innerHTML = message + '<button class="message-close" onclick="this.parentElement.remove()">✕</button>';
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type} toast-dynamic`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
 
-    // Ajouter au conteneur de messages
-    let container = document.querySelector('.messages-container');
-    if (!container) {
-      container = document.createElement('div');
-      container.className = 'messages-container';
-      container.style.cssText = 'position: fixed; top: calc(var(--navbar-height) + 1rem); right: 1rem; z-index: 3000; display: flex; flex-direction: column; gap: 0.75rem; max-width: 380px;';
-      document.body.appendChild(container);
-    }
-
-    container.appendChild(notification);
-
-    // Auto-suppression après 5 secondes
     setTimeout(() => {
-      if (notification.parentElement) {
-        notification.remove();
-      }
-    }, 5000);
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.3s';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
   }
+
+  // ─────────────────────────────────────────────
+  // CSRF
+  // ─────────────────────────────────────────────
+
+  function getCsrfToken() {
+    return document.cookie.split(';')
+      .find(c => c.trim().startsWith('csrftoken='))
+      ?.split('=')[1] || '';
+  }
+
 </script>
+{% endblock %}
+
+
+{% block extra_css %}
+<style>
+  .detail-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  /* ── Section principale ── */
+  .detail-main {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 2.5rem;
+    margin-bottom: 3rem;
+  }
+
+  /* ── Pochette ── */
+  .detail-cover {
+    position: sticky;
+    top: 90px;
+    height: fit-content;
+  }
+
+  .detail-cover-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  }
+
+  .detail-cover-placeholder {
+    width: 100%;
+    aspect-ratio: 1;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+    border: 1px solid var(--border);
+  }
+
+  .detail-rang {
+    text-align: center;
+    margin-top: 1rem;
+    font-family: var(--font-title);
+    font-size: 1.6rem;
+    color: var(--accent-gold);
+  }
+
+  /* ── Infos ── */
+  .detail-infos {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .detail-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .detail-titre {
+    font-family: var(--font-title);
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+    line-height: 1.1;
+  }
+
+  .detail-genre {
+    align-self: flex-start;
+  }
+
+  .detail-artiste-lien {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--accent-gold);
+    font-size: 1.1rem;
+    font-weight: 600;
+    width: fit-content;
+  }
+
+  .detail-artiste-lien:hover {
+    color: var(--accent-gold-hover);
+  }
+
+  .detail-artiste-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent-gold);
+  }
+
+  .detail-artiste-placeholder {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  .detail-artiste-nom {
+    color: var(--accent-gold);
+  }
+
+  .detail-meta {
+    display: flex;
+    gap: 1rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    flex-wrap: wrap;
+  }
+
+  /* ── Lecteur ── */
+  .detail-player {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .detail-play-main {
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 1rem;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Actions ── */
+  .detail-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  /* ── Autres morceaux ── */
+  .detail-autres {
+    margin-top: 1rem;
+  }
+
+  .autres-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .autre-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: var(--transition);
+  }
+
+  .autre-card:hover {
+    border-color: var(--accent-gold);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-gold);
+  }
+
+  .autre-card-image {
+    position: relative;
+    aspect-ratio: 1;
+  }
+
+  .autre-card-image img,
+  .autre-pochette-placeholder {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .autre-pochette-placeholder {
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+  }
+
+  .autre-play-btn {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    border: none;
+    color: white;
+    font-size: 1.8rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .autre-card:hover .autre-play-btn {
+    opacity: 1;
+  }
+
+  .autre-card-info {
+    padding: 0.7rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .autre-card-titre {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .autre-card-titre:hover {
+    color: var(--accent-gold);
+  }
+
+  .autre-card-points {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    z-index: 9999;
+    box-shadow: var(--shadow);
+    white-space: nowrap;
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateX(-50%) translateY(20px);
+      opacity: 0;
+    }
+
+    to {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .toast-success {
+    background: rgba(0, 200, 100, 0.15);
+    border: 1px solid rgba(0, 200, 100, 0.4);
+    color: #00CC64;
+  }
+
+  .toast-error {
+    background: rgba(255, 68, 68, 0.15);
+    border: 1px solid rgba(255, 68, 68, 0.4);
+    color: var(--accent-red);
+  }
+
+  .toast-info {
+    background: rgba(0, 150, 255, 0.15);
+    border: 1px solid rgba(0, 150, 255, 0.4);
+    color: #60AAFF;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .detail-main {
+      grid-template-columns: 1fr;
+    }
+
+    .detail-cover {
+      position: static;
+      max-width: 240px;
+      margin: 0 auto;
+    }
+
+    .detail-titre {
+      font-size: 1.8rem;
+    }
+
+    .detail-actions {
+      flex-direction: column;
+    }
+
+    .detail-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
 {% endblock %}

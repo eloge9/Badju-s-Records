@@ -16,7 +16,15 @@
 
 <body>
   <!-- ── NAVBAR SELON LE RÔLE ── -->
-  {% if not user.is_authenticated %}{% include 'includes/nav_visiteur.html' %}{% elif user.role == 'administrateur' or user.is_staff %}{% include 'includes/nav_admin.html' %}{% elif user.role == 'artiste' %}{% include 'includes/nav_artiste.html' %}{% elif user.role == 'utilisateur' %}{% include 'includes/nav_utilisateur.html' %}{% endif %}
+  {% if not user.is_authenticated %}
+  {% include 'includes/nav_visiteur.html' %}
+  {% elif user.role == 'administrateur' or user.is_staff %}
+  {% include 'includes/nav_admin.html' %}
+  {% elif user.role == 'artiste' %}
+  {% include 'includes/nav_artiste.html' %}
+  {% elif user.role == 'utilisateur' %}
+  {% include 'includes/nav_utilisateur.html' %}
+  {% endif %}
 
   <!-- ── HEADER SELON LE RÔLE ── -->
   {% include 'includes/header.html' %}
@@ -36,6 +44,9 @@
   <!-- ── CONTENU ── -->
   <main class="main-content">{% block content %}{% endblock %}</main>
 
+  <!-- ── AUDIO GLOBAL (caché) ── -->
+  <audio id="audio-global" preload="metadata"></audio>
+
   <!-- ── MINI PLAYER ── -->
   {% include 'includes/mini_player.html' %}
 
@@ -47,6 +58,7 @@
   <script src="{% static 'js/countdown.js' %}"></script>
   <script src="{% static 'js/modal_pub.js' %}"></script>
   <script src="{% static 'js/mini_player.js' %}"></script>
+  <script src="{% static 'js/common.js' %}"></script>
   {% block extra_js %}{% endblock %}
   {% if user.is_authenticated %}
   <span id="user-connecte" style="display: none"></span>

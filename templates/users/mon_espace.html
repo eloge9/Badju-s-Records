@@ -1,31 +1,37 @@
-{% extends 'base.html' %} {% load static %} {% block title %}Mon Espace —
-Badju's Records{% endblock %} {% block content %}
-<div class="dashboard-container">
-  <!-- ── HEADER ── -->
-  <div class="dashboard-header">
-    <div class="dashboard-artiste-info">
-      {% if user.avatar %}
-      <img src="{{ user.avatar.url }}" alt="avatar" class="dashboard-avatar" />
-      {% else %}
-      <div
-        class="dashboard-avatar-placeholder"
-        style="background: var(--accent-gold)"
-      >
-        {{ user.username|first|upper }}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mon Espace — Badju's Records{% endblock %}
+
+{% block content %}
+<div class="espace-container">
+
+  <!-- ── HEADER PROFIL ── -->
+  <div class="espace-header">
+    <div class="espace-cover"></div>
+    <div class="espace-profil-bar">
+      <div class="espace-profil-left">
+        {% if user.avatar %}
+        <img src="{{ user.avatar.url }}" alt="avatar" class="espace-avatar">
+        {% else %}
+        <div class="espace-avatar espace-avatar-placeholder">
+          {{ user.username|first|upper }}
+        </div>
+        {% endif %}
+        <div class="espace-profil-info">
+          <h1 class="espace-nom">{{ user.nom_affiche }}</h1>
+          <p class="espace-username">@{{ user.username }}</p>
+          {% if user.pays %}
+          <p class="espace-pays">📍 {{ user.pays }}</p>
+          {% endif %}
+          <span class="badge-utilisateur">Utilisateur</span>
+        </div>
       </div>
-      {% endif %}
-      <div class="dashboard-artiste-text">
-        <h1 class="dashboard-nom">{{ user.nom_affiche }}</h1>
-        <p class="dashboard-genre">
-          @{{ user.username }} — {{ user.pays|default:"Pays non renseigné" }}
-        </p>
-        <span class="badge-utilisateur">Utilisateur</span>
+      <div class="espace-profil-actions">
+        <a href="{% url 'modifier_profil' %}" class="btn btn-outline">
+          ✏️ Modifier profil
+        </a>
       </div>
-    </div>
-    <div class="dashboard-header-actions">
-      <a href="{% url 'modifier_profil' %}" class="btn btn-outline"
-        >✏️ Modifier profil</a
-      >
     </div>
   </div>
 
@@ -39,6 +45,10 @@ Badju's Records{% endblock %} {% block content %}
       <span class="stat-number">{{ nb_telechargements }}</span>
       <span class="stat-label">Téléchargements</span>
     </div>
+    <div class="stat-card">
+      <span class="stat-number">{{ nb_abonnements }}</span>
+      <span class="stat-label">Abonnements</span>
+    </div>
   </div>
 
   <!-- ── DEVENIR ARTISTE ── -->
@@ -48,126 +58,468 @@ Badju's Records{% endblock %} {% block content %}
       <h2>🎤 Tu es artiste ?</h2>
       <p>Crée ton profil artiste et publie ta musique sur Badju's Records.</p>
     </div>
-    <a href="{% url 'devenir_artiste' %}" class="btn btn-gold"
-      >Devenir Artiste</a
-    >
+    <a href="{% url 'devenir_artiste' %}" class="btn btn-gold">
+      Devenir Artiste
+    </a>
   </div>
   {% endif %}
 
   <!-- ── TABS ── -->
-  <div class="dashboard-tabs">
-    <button class="tab-btn active" onclick="showTab('votes')">
+  <div class="espace-tabs">
+    <button class="espace-tab active" onclick="switchTab('votes', this)">
       👍 Mes votes
     </button>
-    <button class="tab-btn" onclick="showTab('telechargements')">
-      ⬇ Mes téléchargements
+    <button class="espace-tab" onclick="switchTab('telechargements', this)">
+      ⬇ Téléchargements
+    </button>
+    <button class="espace-tab" onclick="switchTab('abonnements', this)">
+      🔔 Abonnements
     </button>
   </div>
 
   <!-- ── TAB VOTES ── -->
-  <div id="tab-votes" class="tab-content active">
-    <h2 class="section-title">Mes votes</h2>
-    {% if votes %}
-    <div class="dashboard-liste">
-      {% for vote in votes %}
-      <div class="dashboard-item">
-        <div class="dashboard-item-left">
-          {% if vote.morceau.pochette %}
-          <img
-            src="{{ vote.morceau.pochette.url }}"
-            alt="pochette"
-            class="dashboard-pochette"
-          />
-          {% else %}
-          <div class="dashboard-pochette pochette-placeholder">🎵</div>
-          {% endif %}
-          <div class="dashboard-item-info">
-            <span class="dashboard-item-titre">{{ vote.morceau.titre }}</span>
-            <span class="dashboard-item-meta"
-              >{{ vote.morceau.artiste.nom_artiste }}</span
-            >
-            <span class="dashboard-item-meta"
-              >{{ vote.created_at|date:"d/m/Y" }}</span
-            >
+  <div id="tab-votes" class="espace-tab-content active">
+    <div class="tab-inner">
+      <div class="tab-header-row">
+        <h2 class="section-title">Mes votes ({{ nb_votes }})</h2>
+      </div>
+      {% if votes %}
+      <div class="dashboard-liste">
+        {% for vote in votes %}
+        <div class="dashboard-item">
+          <div class="dashboard-item-left">
+            {% if vote.morceau.pochette %}
+            <img src="{{ vote.morceau.pochette.url }}" alt="pochette" class="dashboard-pochette">
+            {% else %}
+            <div class="dashboard-pochette pochette-placeholder">🎵</div>
+            {% endif %}
+            <div class="dashboard-item-info">
+              <span class="dashboard-item-titre">{{ vote.morceau.titre }}</span>
+              <span class="dashboard-item-meta">
+                {{ vote.morceau.artiste.nom_artiste }}
+              </span>
+              <span class="dashboard-item-meta">
+                {{ vote.created_at|date:"d M Y" }}
+              </span>
+            </div>
+          </div>
+          <div class="dashboard-item-right">
+            <button class="yt-action-mini" onclick="jouerMorceau({
+                    id: {{ vote.morceau.id }},
+                    titre: '{{ vote.morceau.titre|escapejs }}',
+                    artiste: '{{ vote.morceau.artiste.nom_artiste|escapejs }}',
+                    pochette: '{% if vote.morceau.pochette %}{{ vote.morceau.pochette.url }}{% endif %}',
+                    fichier: '{{ vote.morceau.fichier_mp3.url }}'
+                  })">▶ Écouter
+            </button>
+            <a href="{% url 'detail_morceau' vote.morceau.id %}" class="btn btn-ghost btn-sm">
+              Voir →
+            </a>
           </div>
         </div>
-        <a
-          href="{% url 'detail_morceau' vote.morceau.id %}"
-          class="btn btn-ghost btn-sm"
-          >Voir →</a
-        >
+        {% endfor %}
       </div>
-      {% endfor %}
+      {% else %}
+      <div class="empty-block">
+        <p>Tu n'as encore voté pour aucun morceau.</p>
+        <a href="{% url 'top100' %}" class="btn btn-gold" style="margin-top:1rem;">
+          Découvrir le Top 100
+        </a>
+      </div>
+      {% endif %}
     </div>
-    {% else %}
-    <div class="empty-block">
-      <p>Tu n'as encore voté pour aucun morceau.</p>
-      <a href="{% url 'top100' %}" class="btn btn-gold" style="margin-top: 1rem"
-        >Découvrir le Top 100</a
-      >
-    </div>
-    {% endif %}
   </div>
 
   <!-- ── TAB TÉLÉCHARGEMENTS ── -->
-  <div id="tab-telechargements" class="tab-content">
-    <h2 class="section-title">Mes téléchargements</h2>
-    {% if telechargements %}
-    <div class="dashboard-liste">
-      {% for dl in telechargements %}
-      <div class="dashboard-item">
-        <div class="dashboard-item-left">
-          {% if dl.morceau.pochette %}
-          <img
-            src="{{ dl.morceau.pochette.url }}"
-            alt="pochette"
-            class="dashboard-pochette"
-          />
-          {% else %}
-          <div class="dashboard-pochette pochette-placeholder">🎵</div>
-          {% endif %}
-          <div class="dashboard-item-info">
-            <span class="dashboard-item-titre">{{ dl.morceau.titre }}</span>
-            <span class="dashboard-item-meta"
-              >{{ dl.morceau.artiste.nom_artiste }}</span
-            >
-            <span class="dashboard-item-meta"
-              >{{ dl.created_at|date:"d/m/Y" }}</span
-            >
+  <div id="tab-telechargements" class="espace-tab-content">
+    <div class="tab-inner">
+      <div class="tab-header-row">
+        <h2 class="section-title">Mes téléchargements ({{ nb_telechargements }})</h2>
+      </div>
+      {% if telechargements %}
+      <div class="dashboard-liste">
+        {% for dl in telechargements %}
+        <div class="dashboard-item">
+          <div class="dashboard-item-left">
+            {% if dl.morceau.pochette %}
+            <img src="{{ dl.morceau.pochette.url }}" alt="pochette" class="dashboard-pochette">
+            {% else %}
+            <div class="dashboard-pochette pochette-placeholder">🎵</div>
+            {% endif %}
+            <div class="dashboard-item-info">
+              <span class="dashboard-item-titre">{{ dl.morceau.titre }}</span>
+              <span class="dashboard-item-meta">
+                {{ dl.morceau.artiste.nom_artiste }}
+              </span>
+              <span class="dashboard-item-meta">
+                {{ dl.created_at|date:"d M Y" }}
+              </span>
+            </div>
+          </div>
+          <div class="dashboard-item-right">
+            <button class="yt-action-mini" onclick="jouerMorceau({
+                    id: {{ dl.morceau.id }},
+                    titre: '{{ dl.morceau.titre|escapejs }}',
+                    artiste: '{{ dl.morceau.artiste.nom_artiste|escapejs }}',
+                    pochette: '{% if dl.morceau.pochette %}{{ dl.morceau.pochette.url }}{% endif %}',
+                    fichier: '{{ dl.morceau.fichier_mp3.url }}'
+                  })">▶ Écouter
+            </button>
+            <a href="{% url 'detail_morceau' dl.morceau.id %}" class="btn btn-ghost btn-sm">
+              Voir →
+            </a>
           </div>
         </div>
-        <a
-          href="{% url 'detail_morceau' dl.morceau.id %}"
-          class="btn btn-ghost btn-sm"
-          >Voir →</a
-        >
+        {% endfor %}
       </div>
-      {% endfor %}
+      {% else %}
+      <div class="empty-block">
+        <p>Tu n'as encore rien téléchargé.</p>
+        <a href="{% url 'accueil' %}" class="btn btn-gold" style="margin-top:1rem;">
+          Découvrir la musique
+        </a>
+      </div>
+      {% endif %}
     </div>
-    {% else %}
-    <div class="empty-block">
-      <p>Tu n'as encore rien téléchargé.</p>
-      <a
-        href="{% url 'accueil' %}"
-        class="btn btn-gold"
-        style="margin-top: 1rem"
-        >Découvrir la musique</a
-      >
-    </div>
-    {% endif %}
   </div>
+
+  <!-- ── TAB ABONNEMENTS ── -->
+  <div id="tab-abonnements" class="espace-tab-content">
+    <div class="tab-inner">
+      <div class="tab-header-row">
+        <h2 class="section-title">Mes abonnements ({{ nb_abonnements }})</h2>
+      </div>
+      {% if abonnements %}
+      <div class="abonnements-grid">
+        {% for abo in abonnements %}
+        <a href="{% url 'detail_artiste' abo.artiste.id %}" class="abo-card">
+          {% if abo.artiste.photo %}
+          <img src="{{ abo.artiste.photo.url }}" alt="{{ abo.artiste.nom_artiste }}" class="abo-avatar">
+          {% else %}
+          <div class="abo-avatar abo-avatar-placeholder">
+            {{ abo.artiste.nom_artiste|first|upper }}
+          </div>
+          {% endif %}
+          <span class="abo-nom">{{ abo.artiste.nom_artiste }}</span>
+          <span class="abo-genre">{{ abo.artiste.get_genre_display }}</span>
+          {% if abo.artiste.verified %}
+          <span class="badge-verified">✓</span>
+          {% endif %}
+          <span class="abo-date">
+            Depuis {{ abo.created_at|date:"M Y" }}
+          </span>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-block">
+        <p>Tu n'es abonné à aucun artiste pour le moment.</p>
+        <a href="{% url 'liste_artistes' %}" class="btn btn-gold" style="margin-top:1rem;">
+          Découvrir les artistes
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
 </div>
-{% endblock %} {% block extra_js %}
+{% endblock %}
+
+
+{% block extra_js %}
 <script>
-  function showTab(tab) {
-    document
-      .querySelectorAll(".tab-content")
-      .forEach((t) => t.classList.remove("active"));
-    document
-      .querySelectorAll(".tab-btn")
-      .forEach((b) => b.classList.remove("active"));
-    document.getElementById("tab-" + tab).classList.add("active");
-    event.target.classList.add("active");
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.espace-tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.espace-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    btn.classList.add('active');
   }
 </script>
+{% endblock %}
+
+
+{% block extra_css %}
+<style>
+  .espace-container {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  /* ── Header ── */
+  .espace-header {
+    margin-bottom: 0;
+  }
+
+  .espace-cover {
+    width: 100%;
+    height: 140px;
+    background: linear-gradient(135deg, #1A1A25, #12121A);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .espace-profil-bar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0 1.5rem 1.5rem;
+    flex-wrap: wrap;
+    margin-top: -30px;
+  }
+
+  .espace-profil-left {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+  }
+
+  .espace-avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--bg-primary);
+    flex-shrink: 0;
+  }
+
+  .espace-avatar-placeholder {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+  }
+
+  .espace-profil-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding-bottom: 0.3rem;
+  }
+
+  .espace-nom {
+    font-family: var(--font-title);
+    font-size: 1.6rem;
+    letter-spacing: 1px;
+  }
+
+  .espace-username {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .espace-pays {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+  }
+
+  .espace-profil-actions {
+    padding-bottom: 0.4rem;
+  }
+
+  /* ── Stats ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+
+  /* ── Devenir artiste ── */
+  .devenir-artiste-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    background: linear-gradient(135deg, rgba(245, 166, 35, 0.1), rgba(0, 255, 135, 0.05));
+    border: 1px solid rgba(245, 166, 35, 0.3);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin: 0 1.5rem 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .banner-content h2 {
+    font-family: var(--font-title);
+    font-size: 1.3rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .banner-content p {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+  }
+
+  /* ── Tabs ── */
+  .espace-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0 1.5rem;
+    overflow-x: auto;
+  }
+
+  .espace-tab {
+    padding: 0.85rem 1.4rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--transition);
+  }
+
+  .espace-tab:hover {
+    color: var(--text-primary);
+  }
+
+  .espace-tab.active {
+    color: var(--text-primary);
+    border-bottom-color: var(--accent-gold);
+  }
+
+  .espace-tab-content {
+    display: none;
+  }
+
+  .espace-tab-content.active {
+    display: block;
+  }
+
+  .tab-inner {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .tab-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* ── Actions mini dans les listes ── */
+  .yt-action-mini {
+    padding: 0.35rem 0.8rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .yt-action-mini:hover {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    border-color: var(--accent-gold);
+  }
+
+  /* ── Abonnements grid ── */
+  .abonnements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 1rem;
+  }
+
+  .abo-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.2rem 0.75rem;
+    text-align: center;
+    color: var(--text-primary);
+    transition: var(--transition);
+  }
+
+  .abo-card:hover {
+    border-color: var(--accent-gold);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-gold);
+  }
+
+  .abo-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent-gold);
+  }
+
+  .abo-avatar-placeholder {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+
+  .abo-nom {
+    font-weight: 600;
+    font-size: 0.88rem;
+  }
+
+  .abo-genre {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  .abo-date {
+    color: var(--text-dark);
+    font-size: 0.72rem;
+    margin-top: 0.2rem;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .espace-profil-bar {
+      padding: 0 1rem 1.5rem;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .espace-profil-actions {
+      width: 100%;
+    }
+
+    .stats-grid {
+      padding: 1rem;
+    }
+
+    .devenir-artiste-banner {
+      margin: 0 1rem 1rem;
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .espace-tabs {
+      padding: 0 1rem;
+    }
+
+    .tab-inner {
+      padding: 1rem;
+    }
+
+    .dashboard-item-right {
+      flex-wrap: wrap;
+    }
+  }
+</style>
 {% endblock %}

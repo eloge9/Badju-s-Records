@@ -1,280 +1,659 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Top 100 - Badju's Records{% endblock %}
+{% block title %}Top 100 — Badju's Records{% endblock %}
+
+{% block content %}
+<div class="top100-container">
+
+  <!-- ── HEADER ── -->
+  <div class="top100-header">
+    <h1 class="top100-titre">🏆 Top 100</h1>
+    <p class="top100-sous-titre">
+      Classement des meilleurs morceaux togolais basé sur les votes,
+      téléchargements et vues
+    </p>
+  </div>
+
+  <!-- ── FILTRES ── -->
+  <form method="GET" class="top100-filtres">
+    <select name="genre" class="top100-select" onchange="this.form.submit()">
+      <option value="">Tous les genres</option>
+      {% for val, label in genres %}
+      {% if genre_filtre == val %}
+      <option value="{{ val }}" selected>
+        {% else %}
+      <option value="{{ val }}">
+        {% endif %}
+        {{ label }}
+      </option>
+      {% endfor %}
+    </select>
+    {% if genre_filtre %}
+    <a href="{% url 'top100' %}" class="btn btn-ghost btn-sm">✕ Effacer</a>
+    {% endif %}
+  </form>
+
+  <!-- ── PODIUM TOP 3 ── -->
+  {% if morceaux|length >= 3 %}
+  <div class="podium">
+
+    <!-- 2ème place -->
+    <div class="podium-item podium-2">
+      <div class="podium-pochette">
+        {% if morceaux.1.pochette %}
+        <img src="{{ morceaux.1.pochette.url }}" alt="{{ morceaux.1.titre }}">
+        {% else %}
+        <div class="podium-pochette-placeholder">🎵</div>
+        {% endif %}
+        <span class="podium-medaille">🥈</span>
+      </div>
+      <p class="podium-titre">{{ morceaux.1.titre }}</p>
+      <p class="podium-artiste">{{ morceaux.1.artiste.nom_artiste }}</p>
+      <p class="podium-points">{{ morceaux.1.points }} pts</p>
+      <button class="podium-play" onclick="jouerMorceau({
+            id: {{ morceaux.1.id }},
+            titre: '{{ morceaux.1.titre|escapejs }}',
+            artiste: '{{ morceaux.1.artiste.nom_artiste|escapejs }}',
+            pochette: '{% if morceaux.1.pochette %}{{ morceaux.1.pochette.url }}{% endif %}',
+            fichier: '{{ morceaux.1.fichier_mp3.url }}'
+          })">▶ Écouter
+      </button>
+    </div>
+
+    <!-- 1ère place -->
+    <div class="podium-item podium-1">
+      <div class="podium-pochette">
+        {% if morceaux.0.pochette %}
+        <img src="{{ morceaux.0.pochette.url }}" alt="{{ morceaux.0.titre }}">
+        {% else %}
+        <div class="podium-pochette-placeholder">🎵</div>
+        {% endif %}
+        <span class="podium-medaille">🥇</span>
+      </div>
+      <p class="podium-titre">{{ morceaux.0.titre }}</p>
+      <p class="podium-artiste">{{ morceaux.0.artiste.nom_artiste }}</p>
+      <p class="podium-points">{{ morceaux.0.points }} pts</p>
+      <button class="podium-play podium-play-gold" onclick="jouerMorceau({
+            id: {{ morceaux.0.id }},
+            titre: '{{ morceaux.0.titre|escapejs }}',
+            artiste: '{{ morceaux.0.artiste.nom_artiste|escapejs }}',
+            pochette: '{% if morceaux.0.pochette %}{{ morceaux.0.pochette.url }}{% endif %}',
+            fichier: '{{ morceaux.0.fichier_mp3.url }}'
+          })">▶ Écouter
+      </button>
+    </div>
+
+    <!-- 3ème place -->
+    <div class="podium-item podium-3">
+      <div class="podium-pochette">
+        {% if morceaux.2.pochette %}
+        <img src="{{ morceaux.2.pochette.url }}" alt="{{ morceaux.2.titre }}">
+        {% else %}
+        <div class="podium-pochette-placeholder">🎵</div>
+        {% endif %}
+        <span class="podium-medaille">🥉</span>
+      </div>
+      <p class="podium-titre">{{ morceaux.2.titre }}</p>
+      <p class="podium-artiste">{{ morceaux.2.artiste.nom_artiste }}</p>
+      <p class="podium-points">{{ morceaux.2.points }} pts</p>
+      <button class="podium-play" onclick="jouerMorceau({
+            id: {{ morceaux.2.id }},
+            titre: '{{ morceaux.2.titre|escapejs }}',
+            artiste: '{{ morceaux.2.artiste.nom_artiste|escapejs }}',
+            pochette: '{% if morceaux.2.pochette %}{{ morceaux.2.pochette.url }}{% endif %}',
+            fichier: '{{ morceaux.2.fichier_mp3.url }}'
+          })">▶ Écouter
+      </button>
+    </div>
+
+  </div>
+  {% endif %}
+
+  <!-- ── LISTE COMPLÈTE ── -->
+  {% if morceaux %}
+  <div class="top100-liste">
+    {% for morceau in morceaux %}
+    <div class="top100-item {% if forloop.counter <= 3 %}top100-item-top{% endif %}">
+
+      <!-- Rang -->
+      <div class="top100-rang
+            {% if forloop.counter == 1 %}rang-or
+            {% elif forloop.counter == 2 %}rang-argent
+            {% elif forloop.counter == 3 %}rang-bronze
+            {% endif %}">
+        {% if forloop.counter == 1 %}🥇
+        {% elif forloop.counter == 2 %}🥈
+        {% elif forloop.counter == 3 %}🥉
+        {% else %}{{ forloop.counter }}
+        {% endif %}
+      </div>
+
+      <!-- Pochette -->
+      <div class="top100-pochette-wrap">
+        {% if morceau.pochette %}
+        <img src="{{ morceau.pochette.url }}" alt="{{ morceau.titre }}" class="top100-pochette">
+        {% else %}
+        <div class="top100-pochette top100-pochette-placeholder">🎵</div>
+        {% endif %}
+        <button class="top100-pochette-play" onclick="jouerMorceau({
+                id: {{ morceau.id }},
+                titre: '{{ morceau.titre|escapejs }}',
+                artiste: '{{ morceau.artiste.nom_artiste|escapejs }}',
+                pochette: '{% if morceau.pochette %}{{ morceau.pochette.url }}{% endif %}',
+                fichier: '{{ morceau.fichier_mp3.url }}'
+              })">▶
+        </button>
+      </div>
+
+      <!-- Infos -->
+      <div class="top100-infos">
+        <a href="{% url 'detail_morceau' morceau.id %}" class="top100-titre">
+          {{ morceau.titre }}
+        </a>
+        <a href="{% url 'detail_artiste' morceau.artiste.id %}" class="top100-artiste">
+          {{ morceau.artiste.nom_artiste }}
+        </a>
+        <span class="top100-genre badge-genre">{{ morceau.get_genre_display }}</span>
+      </div>
+
+      <!-- Stats -->
+      <div class="top100-stats">
+        <div class="top100-stat">
+          <span class="top100-stat-nb">{{ morceau.nb_votes }}</span>
+          <span class="top100-stat-label">votes</span>
+        </div>
+        <div class="top100-stat">
+          <span class="top100-stat-nb">{{ morceau.nb_telechargements }}</span>
+          <span class="top100-stat-label">dl</span>
+        </div>
+      </div>
+
+      <!-- Points -->
+      <div class="top100-points">
+        <span class="top100-points-nb">{{ morceau.points }}</span>
+        <span class="top100-points-label">pts</span>
+      </div>
+
+      <!-- Actions -->
+      <div class="top100-actions">
+        <button class="btn btn-gold btn-sm" onclick="jouerMorceau({
+                id: {{ morceau.id }},
+                titre: '{{ morceau.titre|escapejs }}',
+                artiste: '{{ morceau.artiste.nom_artiste|escapejs }}',
+                pochette: '{% if morceau.pochette %}{{ morceau.pochette.url }}{% endif %}',
+                fichier: '{{ morceau.fichier_mp3.url }}'
+              })">▶
+        </button>
+        {% if user.is_authenticated %}
+        <button class="btn btn-outline btn-sm" onclick="telecharger({{ morceau.id }})">⬇
+        </button>
+        {% else %}
+        <a href="{% url 'connexion' %}" class="btn btn-outline btn-sm">⬇</a>
+        {% endif %}
+        <a href="{% url 'detail_morceau' morceau.id %}" class="btn btn-ghost btn-sm">👁
+        </a>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty-block">
+    {% if genre_filtre %}
+    <p>Aucun morceau dans ce genre pour le moment.</p>
+    <a href="{% url 'top100' %}" class="btn btn-gold" style="margin-top:1rem;">
+      Voir tout le classement
+    </a>
+    {% else %}
+    <p>Aucun morceau dans le classement pour le moment.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+  function telecharger(morceauId) {
+    const csrf = getCsrfToken();
+    const formData = new FormData();
+    formData.append('pub_vue', 'false');
+
+    fetch(`/engagement/telecharger/${morceauId}/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrf },
+      body: formData,
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.succes && data.url) {
+          const a = document.createElement('a');
+          a.href = data.url;
+          a.download = '';
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => document.body.removeChild(a), 1000);
+        }
+      });
+  }
+
+  function getCsrfToken() {
+    return document.cookie.split(';')
+      .find(c => c.trim().startsWith('csrftoken='))
+      ?.split('=')[1] || '';
+  }
+</script>
+{% endblock %}
+
 
 {% block extra_css %}
 <style>
-.top100-header {
-  text-align: center;
-  margin-bottom: 3rem;
-}
+  .top100-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
 
-.top100-header h1 {
-  font-size: 3rem;
-  color: var(--text-primary);
-  margin-bottom: 1rem;
-  font-family: var(--font-title);
-}
+  /* ── Header ── */
+  .top100-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
 
-.top100-header p {
-  color: var(--text-muted);
-  font-size: 1.1rem;
-}
+  .top100-titre {
+    font-family: var(--font-title);
+    font-size: 3rem;
+    letter-spacing: 3px;
+    color: var(--accent-gold);
+  }
 
-.filtre-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 2rem;
-}
+  .top100-sous-titre {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+  }
 
-.filtre-genre {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 0.5rem 1rem;
-  font-family: var(--font-title);
-  color: var(--accent-gold);
-}
+  /* ── Filtres ── */
+  .top100-filtres {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
 
-.classement-container {
-  display: grid;
-  gap: 1rem;
-  max-width: 800px;
-  margin: 0 auto;
-}
+  .top100-select {
+    padding: 0.6rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    cursor: pointer;
+    outline: none;
+  }
 
-.classement-item {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  transition: var(--transition);
-  cursor: pointer;
-}
+  .top100-select:focus {
+    border-color: var(--accent-gold);
+  }
 
-.classement-item:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--accent-gold);
-}
+  /* ── Podium ── */
+  .podium {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+  }
 
-.classement-position {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--accent-gold);
-  font-family: var(--font-title);
-  min-width: 60px;
-  text-align: center;
-}
+  .podium-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1rem;
+    text-align: center;
+    transition: var(--transition);
+    min-width: 160px;
+  }
 
-.classement-position.top-1 {
-  color: #FFD700;
-  font-size: 2.5rem;
-}
+  .podium-item:hover {
+    transform: translateY(-4px);
+  }
 
-.classement-position.top-2 {
-  color: #C0C0C0;
-  font-size: 2.3rem;
-}
+  .podium-1 {
+    border-color: rgba(255, 215, 0, 0.4);
+    background: linear-gradient(135deg, var(--bg-card), rgba(255, 215, 0, 0.05));
+    order: 2;
+    padding-top: 2rem;
+  }
 
-.classement-position.top-3 {
-  color: #CD7F32;
-  font-size: 2.1rem;
-}
+  .podium-2 {
+    order: 1;
+  }
 
-.classement-cover {
-  width: 80px;
-  height: 80px;
-  border-radius: var(--radius-md);
-  object-fit: cover;
-}
+  .podium-3 {
+    order: 3;
+  }
 
-.classement-info {
-  flex: 1;
-}
+  .podium-pochette {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
 
-.classement-titre {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-size: 1.1rem;
-  margin-bottom: 0.25rem;
-}
+  .podium-1 .podium-pochette {
+    width: 110px;
+    height: 110px;
+  }
 
-.classement-artiste {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-}
+  .podium-pochette img,
+  .podium-pochette-placeholder {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
-.classement-meta {
-  display: flex;
-  gap: 1rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.classement-points {
-  color: var(--accent-gold);
-  font-weight: 600;
-}
-
-.classement-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn-play-small {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--accent-gold);
-  border: none;
-  color: var(--bg-primary);
-  font-size: 1rem;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.btn-play-small:hover {
-  background: var(--accent-gold-hover);
-  transform: scale(1.1);
-}
-
-.empty-classement {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: var(--text-muted);
-}
-
-.empty-classement i {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
-@media (max-width: 768px) {
-  .top100-header h1 {
+  .podium-pochette-placeholder {
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 2rem;
   }
-  
-  .classement-item {
-    padding: 1rem;
-    gap: 1rem;
+
+  .podium-medaille {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 1.4rem;
   }
-  
-  .classement-position {
-    font-size: 1.5rem;
-    min-width: 40px;
+
+  .podium-titre {
+    font-weight: 700;
+    font-size: 0.88rem;
+    max-width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  
-  .classement-cover {
-    width: 60px;
-    height: 60px;
+
+  .podium-artiste {
+    color: var(--text-muted);
+    font-size: 0.78rem;
   }
-  
-  .classement-actions {
+
+  .podium-points {
+    font-family: var(--font-title);
+    font-size: 1.1rem;
+    color: var(--accent-gold);
+  }
+
+  .podium-play {
+    padding: 0.4rem 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .podium-play:hover {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    border-color: var(--accent-gold);
+  }
+
+  .podium-play-gold {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    border-color: var(--accent-gold);
+  }
+
+  .podium-play-gold:hover {
+    background: var(--accent-gold-hover);
+  }
+
+  /* ── Liste ── */
+  .top100-liste {
+    display: flex;
     flex-direction: column;
+    gap: 0.5rem;
   }
-}
+
+  .top100-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    transition: var(--transition);
+  }
+
+  .top100-item:hover {
+    border-color: var(--border-hover);
+    background: var(--bg-card-hover);
+  }
+
+  .top100-item-top {
+    border-left: 3px solid var(--accent-gold);
+  }
+
+  .top100-rang {
+    font-family: var(--font-title);
+    font-size: 1.3rem;
+    min-width: 40px;
+    text-align: center;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .rang-or {
+    color: #FFD700;
+  }
+
+  .rang-argent {
+    color: #C0C0C0;
+  }
+
+  .rang-bronze {
+    color: #CD7F32;
+  }
+
+  .top100-pochette-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .top100-pochette {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    display: block;
+  }
+
+  .top100-pochette-placeholder {
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+  }
+
+  .top100-pochette-play {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    border: none;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: var(--transition);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .top100-pochette-wrap:hover .top100-pochette-play {
+    opacity: 1;
+  }
+
+  .top100-infos {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  .top100-titre {
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .top100-titre:hover {
+    color: var(--accent-gold);
+  }
+
+  .top100-artiste {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  .top100-artiste:hover {
+    color: var(--accent-gold);
+  }
+
+  .top100-stats {
+    display: flex;
+    gap: 1rem;
+    flex-shrink: 0;
+  }
+
+  .top100-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+  }
+
+  .top100-stat-nb {
+    font-family: var(--font-title);
+    font-size: 1rem;
+    color: var(--text-primary);
+  }
+
+  .top100-stat-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+  }
+
+  .top100-points {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    min-width: 60px;
+    flex-shrink: 0;
+  }
+
+  .top100-points-nb {
+    font-family: var(--font-title);
+    font-size: 1.3rem;
+    color: var(--accent-gold);
+  }
+
+  .top100-points-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+
+  .top100-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .top100-titre {
+      font-size: 2rem;
+    }
+
+    .podium {
+      gap: 0.75rem;
+    }
+
+    .podium-item {
+      min-width: 110px;
+      padding: 1rem 0.6rem;
+    }
+
+    .top100-stats {
+      display: none;
+    }
+
+    .top100-actions {
+      flex-direction: column;
+    }
+
+    .top100-actions .btn {
+      padding: 0.3rem 0.6rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .podium-1 .podium-pochette {
+      width: 80px;
+      height: 80px;
+    }
+
+    .podium-pochette {
+      width: 65px;
+      height: 65px;
+    }
+
+    .top100-rang {
+      min-width: 28px;
+      font-size: 1rem;
+    }
+  }
 </style>
 {% endblock %}
+```
 
-{% block content %}
-<div class="main-content">
-  <div class="top100-header">
-    <h1>🏆 Top 100</h1>
-    <p>Les meilleurs morceaux de la musique togolaise</p>
-  </div>
+---
 
-  <div class="filtre-container">
-    {% if genre_filtre %}
-      <div class="filtre-genre">
-        🎵 Genre: {{ genre_filtre }}
-        <a href="{% url 'top100' %}" style="margin-left: 1rem; color: var(--text-muted);">✕</a>
-      </div>
-    {% endif %}
-  </div>
-
-  <div class="classement-container">
-    {% if morceaux %}
-      {% for morceau in morceaux %}
-        <div class="classement-item" onclick="playMorceau({{ morceau.id }})">
-          <div class="classement-position {% if forloop.counter <= 3 %}top-{{ forloop.counter }}{% endif %}">
-            {{ forloop.counter }}
-          </div>
-          
-          {% if morceau.pochette %}
-            <img src="{{ morceau.pochette.url }}" alt="{{ morceau.titre }}" class="classement-cover">
-          {% else %}
-            <img src="{% static 'img/default-cover.jpg' %}" alt="{{ morceau.titre }}" class="classement-cover">
-          {% endif %}
-          
-          <div class="classement-info">
-            <div class="classement-titre">{{ morceau.titre }}</div>
-            <div class="classement-artiste">
-              <a href="{% url 'detail_artiste' morceau.artiste.id %}" style="color: inherit; text-decoration: none;">
-                {{ morceau.artiste.nom_artiste }}
-              </a>
-            </div>
-            <div class="classement-meta">
-              <span class="classement-points">⭐ {{ morceau.points }} pts</span>
-              <span>👍 {{ morceau.nb_votes }} votes</span>
-              <span>⬇️ {{ morceau.nb_telechargements }} DL</span>
-              <span>🎵 {{ morceau.get_genre_display }}</span>
-            </div>
-          </div>
-          
-          <div class="classement-actions">
-            <button class="btn-play-small" onclick="event.stopPropagation(); playMorceau({{ morceau.id }})" title="Écouter">
-              ▶
-            </button>
-            <button class="btn-play-small" onclick="event.stopPropagation(); ouvrirModalTelechargement({{ morceau.id }})" title="Télécharger" style="background: var(--bg-secondary); color: var(--text-primary);">
-              ⬇
-            </button>
-          </div>
-        </div>
-      {% endfor %}
-    {% else %}
-      <div class="empty-classement">
-        <i>🎵</i>
-        <h3>Aucun morceau trouvé</h3>
-        <p>
-          {% if genre_filtre %}
-            Aucun morceau dans le genre "{{ genre_filtre }}" pour le moment.
-            <a href="{% url 'top100' %}">Voir tous les morceaux</a>
-          {% else %}
-            Aucun morceau validé pour le moment. Revenez plus tard !
-          {% endif %}
-        </p>
-      </div>
-    {% endif %}
-  </div>
-</div>
-
-<script>
-// Préparer les données pour le player
-window.top100Data = [
-  {% for morceau in morceaux %}
-  {
-    id: {{ morceau.id }},
-    titre: "{{ morceau.titre|escapejs }}",
-    artiste: { nom_artiste: "{{ morceau.artiste.nom_artiste|escapejs }}" },
-    pochette: {% if morceau.pochette %}"{{ morceau.pochette.url }}"{% else %}"{% static 'img/default-cover.jpg' %}"{% endif %},
-    fichier_mp3: "{{ morceau.fichier_mp3.url }}"
-  }{% if not forloop.last %},{% endif %}
-  {% endfor %}
-];
-
-function playMorceau(morceauId) {
-  const morceau = window.top100Data.find(m => m.id === morceauId);
-  if (morceau && window.miniPlayer) {
-    window.miniPlayer.loadMorceau(morceau, window.top100Data);
-    window.miniPlayer.play();
-  }
-}
-</script>
-{% endblock %}
+Ce que fait ce template :
+```
+✅ Podium visuel pour le Top 3 (1er plus grand au centre)
+✅ Liste complète du Top 100
+✅ Filtre par genre
+✅ Bouton écouter → mini-player global
+✅ Bouton télécharger → téléchargement direct
+✅ Bouton voir → page détail morceau
+✅ Stats : votes + téléchargements par morceau
+✅ Responsive mobile

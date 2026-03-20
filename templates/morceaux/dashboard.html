@@ -100,8 +100,11 @@ Badju's Records{% endblock %} {% block content %}
           </span>
           <div class="dashboard-item-actions">
             <a href="{% url 'modifier_morceau' morceau.id %}" class="btn btn-outline btn-sm">✏️ Modifier</a>
-            <a href="{% url 'supprimer_morceau' morceau.id %}" class="btn btn-danger btn-sm"
-              onclick="return confirm('Supprimer ce morceau ?');">🗑</a>
+            <button class="btn btn-danger btn-sm" onclick="confirmerSuppression(
+                '{% url 'supprimer_morceau' morceau.id %}',
+                '{{ morceau.titre|escapejs }}',
+                'morceau'
+              )">🗑</button>
           </div>
         </div>
       </div>
@@ -151,14 +154,21 @@ Badju's Records{% endblock %} {% block content %}
             Refusé {% endif %}
           </span>
           <a href="{% url 'modifier_video' video.id %}" class="btn btn-outline btn-sm">✏️ Modifier</a>
-          <a href="{% url 'supprimer_video' video.id %}" class="btn btn-danger btn-sm"
-            onclick="return confirm('Supprimer cette vidéo ?');">🗑</a>
+          <button class="btn btn-danger btn-sm" onclick="confirmerSuppression(
+              '{% url 'supprimer_video' video.id %}',
+              '{{ video.titre|escapejs }}',
+              'vidéo'
+            )">🗑</button>
         </div>
       </div>
       {% endfor %}
     </div>
     {% else %}
     <div class="empty-block">
+      <p>Tu n'as pas encore ajouté de vidéo.</p>
+      <a href="{% url 'ajouter_video' %}" class="btn btn-gold" style="margin-top: 1rem">
+        + Ajouter ma première vidéo
+      </a>
       <p>Tu n'as pas encore ajouté de vidéo.</p>
       <a href="{% url 'ajouter_video' %}" class="btn btn-gold" style="margin-top: 1rem">
         + Ajouter ma première vidéo
@@ -213,17 +223,67 @@ Badju's Records{% endblock %} {% block content %}
   </div>
 </div>
 
+<!-- ── MODAL CONFIRMATION SUPPRESSION ── -->
+<div id="modal-suppression" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);
+         z-index:9999;align-items:center;justify-content:center;">
+  <div class="suppression-box">
+    <div class="suppression-icon">🗑️</div>
+    <h3 class="suppression-titre">Supprimer ce contenu ?</h3>
+    <p class="suppression-message" id="suppression-message"></p>
+    <p class="suppression-warning">
+      ⚠️ Cette action est irréversible. Les votes et téléchargements
+      associés seront également supprimés.
+    </p>
+    <div class="suppression-actions">
+      <button type="button" class="btn btn-ghost" onclick="fermerModalSuppression()">
+        Annuler
+      </button>
+      <form id="form-suppression" method="POST" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger-full">
+          🗑 Oui, supprimer
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
 {% endblock %} {% block extra_js %}
 <script>
+  function confirmerSuppression(url, titre, type) {
+    var modal = document.getElementById('modal-suppression');
+    var message = document.getElementById('suppression-message');
+    var form = document.getElementById('form-suppression');
+
+    message.textContent = 'Tu es sur le point de supprimer ' + type + ' "' + titre + '".';
+    form.action = url;
+    modal.style.display = 'flex';
+  }
+
+  function fermerModalSuppression() {
+    document.getElementById('modal-suppression').style.display = 'none';
+  }
+
+  // Fermer en cliquant sur le fond
+  document.getElementById('modal-suppression').addEventListener('click', function (e) {
+    if (e.target === this) fermerModalSuppression();
+  });
+
+  // Fermer avec Échap
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') fermerModalSuppression();
+  });
+
+  // JS existant pour les tabs
   function showTab(tab) {
-    document
-      .querySelectorAll(".tab-content")
-      .forEach((t) => t.classList.remove("active"));
-    document
-      .querySelectorAll(".tab-btn")
-      .forEach((b) => b.classList.remove("active"));
-    document.getElementById("tab-" + tab).classList.add("active");
-    event.target.classList.add("active");
+    document.querySelectorAll('.tab-content').forEach(function (t) {
+      t.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-btn').forEach(function (b) {
+      b.classList.remove('active');
+    });
+    document.getElementById('tab-' + tab).classList.add('active');
+    event.target.classList.add('active');
   }
 </script>
 {% endblock %} {% block extra_css %}
@@ -545,6 +605,88 @@ Badju's Records{% endblock %} {% block content %}
       width: 100%;
       justify-content: space-between;
     }
+  }
+
+  /* ── Modal suppression ── */
+  .suppression-box {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 68, 68, 0.3);
+    border-radius: var(--radius-xl);
+    padding: 2rem;
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .suppression-icon {
+    font-size: 3rem;
+  }
+
+  .suppression-titre {
+    font-family: var(--font-title);
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+  }
+
+  .suppression-message {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .suppression-warning {
+    font-size: 0.82rem;
+    color: var(--accent-red);
+    background: rgba(255, 68, 68, 0.08);
+    border: 1px solid rgba(255, 68, 68, 0.2);
+    border-radius: var(--radius-md);
+    padding: 0.6rem 0.9rem;
+    line-height: 1.5;
+  }
+
+  .suppression-actions {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .suppression-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .suppression-actions form {
+    flex: 1;
+  }
+
+  .suppression-actions form button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-danger-full {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.4rem;
+    background: var(--accent-red);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .btn-danger-full:hover {
+    background: #cc3333;
   }
 </style>
 {% endblock %}

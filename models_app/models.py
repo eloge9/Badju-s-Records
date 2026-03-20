@@ -306,7 +306,7 @@ class Morceau(models.Model):
     statut      = models.CharField(
                       max_length=20,
                       choices=STATUTS,
-                      default='en_attente'
+                      default='valide'
                   )
     date_sortie = models.DateField()
     created_at  = models.DateTimeField(auto_now_add=True)
@@ -355,6 +355,7 @@ class Video(models.Model):
                         related_name='videos'
                     )
     titre         = models.CharField(max_length=200)
+    description   = models.TextField(blank=True, help_text='Description de la vidéo')
     fichier_video = models.FileField(
                         upload_to='morceaux/videos/',
                         null=True,
@@ -375,7 +376,7 @@ class Video(models.Model):
     statut        = models.CharField(
                         max_length=20,
                         choices=STATUTS,
-                        default='en_attente'
+                        default='valide'
                     )
     created_at    = models.DateTimeField(auto_now_add=True)
 
@@ -614,3 +615,97 @@ class CommentaireVideo(models.Model):
 
     def __str__(self):
         return f"{self.user.username} sur {self.video.titre}"
+
+
+# ─────────────────────────────────────────────
+# ABONNEMENTS
+# ─────────────────────────────────────────────
+
+class Abonnement(models.Model):
+    abonne    = models.ForeignKey(
+                    User,
+                    on_delete=models.CASCADE,
+                    related_name='abonnements'
+                )
+    artiste   = models.ForeignKey(
+                    ProfilArtiste,
+                    on_delete=models.CASCADE,
+                    related_name='abonnes'
+                )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'abonnements'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['abonne', 'artiste'],
+                name='un_abonnement_par_user_par_artiste'
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.abonne.username} → {self.artiste.nom_artiste}"
+
+
+# ─────────────────────────────────────────────
+# ÉCOUTES DE MORCEAUX
+# ─────────────────────────────────────────────
+
+class EcouteMorceau(models.Model):
+    morceau    = models.ForeignKey(
+                       Morceau,
+                       on_delete=models.CASCADE,
+                       related_name='ecoutes'
+                   )
+    user        = models.ForeignKey(
+                       User,
+                       on_delete=models.CASCADE,
+                       null=True, blank=True
+                   )
+    session_id  = models.CharField(max_length=40, null=True, blank=True)
+    ip_address  = models.GenericIPAddressField(null=True, blank=True)
+    duree       = models.PositiveIntegerField(null=True, blank=True)  # en secondes
+    created_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'ecoutes_morceaux'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        if self.user:
+            return f"Écoute de {self.morceau.titre} par {self.user.username}"
+        return f"Écoute de {self.morceau.titre} (session {self.session_id})"
+
+
+# ─────────────────────────────────────────────
+# NOTIFICATIONS
+# ─────────────────────────────────────────────
+
+class Notification(models.Model):
+    TYPES = [
+        ('vote',         '👍 Vote sur ton morceau'),
+        ('telechargement','⬇ Téléchargement de ton morceau'),
+        ('commentaire',  '💬 Commentaire sur ta vidéo'),
+        ('like',         '❤ Like sur ta vidéo'),
+        ('abonnement',   '🔔 Nouvel abonné'),
+        ('validation',   '✅ Morceau validé par un admin'),
+        ('refus',        '❌ Morceau refusé par un admin'),
+    ]
+
+    destinataire = models.ForeignKey(
+                       User,
+                       on_delete=models.CASCADE,
+                       related_name='notifications'
+                   )
+    type_notif   = models.CharField(max_length=20, choices=TYPES)
+    message      = models.CharField(max_length=255)
+    lien         = models.CharField(max_length=255, blank=True)
+    lu           = models.BooleanField(default=False)
+    created_at   = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'notifications'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notif → {self.destinataire.username} : {self.message}"

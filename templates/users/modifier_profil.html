@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Modifier mon profil — Badju's Records{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+  <div class="auth-card auth-card-large">
+
+    <div class="auth-header">
+      <h1 class="auth-title">✏️ Modifier mon profil</h1>
+      <p class="auth-subtitle">Mets à jour tes informations personnelles</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="auth-form">
+      {% csrf_token %}
+
+      <!-- ── SECTION COMPTE ── -->
+      <div class="form-section-title">Informations du compte</div>
+
+      <!-- Avatar actuel -->
+      {% if user.avatar %}
+        <div class="form-group">
+          <label>Avatar actuel</label>
+          <img src="{{ user.avatar.url }}"
+               alt="avatar"
+               style="height:70px;width:70px;border-radius:50%;object-fit:cover;border:2px solid var(--accent-gold);">
+        </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label for="{{ form.avatar.id_for_label }}">
+          {% if user.avatar %}Changer l'avatar{% else %}Avatar{% endif %}
+        </label>
+        {{ form.avatar }}
+        {% if form.avatar.errors %}
+          <span class="form-error">{{ form.avatar.errors.0 }}</span>
+        {% endif %}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="{{ form.first_name.id_for_label }}">Prénom</label>
+          {{ form.first_name }}
+          {% if form.first_name.errors %}
+            <span class="form-error">{{ form.first_name.errors.0 }}</span>
+          {% endif %}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.last_name.id_for_label }}">Nom</label>
+          {{ form.last_name }}
+          {% if form.last_name.errors %}
+            <span class="form-error">{{ form.last_name.errors.0 }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.email.id_for_label }}">Email</label>
+        {{ form.email }}
+        {% if form.email.errors %}
+          <span class="form-error">{{ form.email.errors.0 }}</span>
+        {% endif %}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="{{ form.pays.id_for_label }}">Pays</label>
+          {{ form.pays }}
+          {% if form.pays.errors %}
+            <span class="form-error">{{ form.pays.errors.0 }}</span>
+          {% endif %}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.telephone.id_for_label }}">Téléphone</label>
+          {{ form.telephone }}
+          {% if form.telephone.errors %}
+            <span class="form-error">{{ form.telephone.errors.0 }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- ── SECTION ARTISTE (si artiste) ── -->
+      {% if form_artiste %}
+        <div class="form-section-title" style="margin-top:1rem;">
+          Profil artiste
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form_artiste.nom_artiste.id_for_label }}">
+            Nom de scène *
+          </label>
+          {{ form_artiste.nom_artiste }}
+          {% if form_artiste.nom_artiste.errors %}
+            <span class="form-error">{{ form_artiste.nom_artiste.errors.0 }}</span>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form_artiste.bio.id_for_label }}">Biographie</label>
+          {{ form_artiste.bio }}
+          {% if form_artiste.bio.errors %}
+            <span class="form-error">{{ form_artiste.bio.errors.0 }}</span>
+          {% endif %}
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="{{ form_artiste.genre.id_for_label }}">Genre musical</label>
+            {{ form_artiste.genre }}
+          </div>
+          <div class="form-group">
+            <label for="{{ form_artiste.ville.id_for_label }}">Ville</label>
+            {{ form_artiste.ville }}
+          </div>
+        </div>
+
+        <!-- Photos artiste actuelles -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Photo de profil actuelle</label>
+            {% if user.profil_artiste.photo %}
+              <img src="{{ user.profil_artiste.photo.url }}"
+                   alt="photo"
+                   style="height:60px;width:60px;border-radius:50%;object-fit:cover;border:2px solid var(--accent-gold);margin-bottom:0.5rem;display:block;">
+            {% endif %}
+            <label for="{{ form_artiste.photo.id_for_label }}">
+              {% if user.profil_artiste.photo %}Changer la photo{% else %}Photo de profil{% endif %}
+            </label>
+            {{ form_artiste.photo }}
+            {% if form_artiste.photo.errors %}
+              <span class="form-error">{{ form_artiste.photo.errors.0 }}</span>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label>Photo de couverture actuelle</label>
+            {% if user.profil_artiste.photo_cover %}
+              <img src="{{ user.profil_artiste.photo_cover.url }}"
+                   alt="cover"
+                   style="height:60px;width:160px;object-fit:cover;border-radius:4px;margin-bottom:0.5rem;display:block;">
+            {% endif %}
+            <label for="{{ form_artiste.photo_cover.id_for_label }}">
+              {% if user.profil_artiste.photo_cover %}Changer la cover{% else %}Photo de couverture{% endif %}
+            </label>
+            {{ form_artiste.photo_cover }}
+            {% if form_artiste.photo_cover.errors %}
+              <span class="form-error">{{ form_artiste.photo_cover.errors.0 }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-section-title" style="margin-top:0.5rem;">
+          Réseaux sociaux
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form_artiste.facebook.id_for_label }}">Facebook</label>
+          {{ form_artiste.facebook }}
+        </div>
+        <div class="form-group">
+          <label for="{{ form_artiste.instagram.id_for_label }}">Instagram</label>
+          {{ form_artiste.instagram }}
+        </div>
+        <div class="form-group">
+          <label for="{{ form_artiste.twitter.id_for_label }}">Twitter / X</label>
+          {{ form_artiste.twitter }}
+        </div>
+
+      {% endif %}
+
+      <!-- Erreurs globales -->
+      {% if form.non_field_errors %}
+        <div class="form-error-global">{{ form.non_field_errors.0 }}</div>
+      {% endif %}
+
+      <!-- Boutons -->
+      <div class="form-actions">
+        {% if user.role == 'artiste' %}
+          <a href="{% url 'dashboard' %}" class="btn btn-ghost">Annuler</a>
+        {% else %}
+          <a href="{% url 'mon_espace' %}" class="btn btn-ghost">Annuler</a>
+        {% endif %}
+        <button type="submit" class="btn btn-gold">
+          💾 Sauvegarder les modifications
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+{% endblock %}

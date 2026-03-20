@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}@{{ profil_user.username }} — Badju's Records{% endblock %}
+
+{% block content %}
+<div class="profil-public-container">
+
+  <div class="profil-public-header">
+    {% if profil_user.avatar %}
+      <img src="{{ profil_user.avatar.url }}" alt="avatar" class="profil-public-avatar">
+    {% else %}
+      <div class="profil-public-avatar profil-public-avatar-placeholder">
+        {{ profil_user.username|first|upper }}
+      </div>
+    {% endif %}
+    <div class="profil-public-info">
+      <h1>{{ profil_user.nom_affiche }}</h1>
+      <p class="profil-public-username">@{{ profil_user.username }}</p>
+      {% if profil_user.pays %}
+        <p class="profil-public-pays">📍 {{ profil_user.pays }}</p>
+      {% endif %}
+      <span class="badge-utilisateur">Membre</span>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-number">{{ nb_votes }}</span>
+      <span class="stat-label">Votes donnés</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number">{{ nb_dl }}</span>
+      <span class="stat-label">Téléchargements</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Derniers votes</h2>
+    {% if votes %}
+      <div class="dashboard-liste">
+        {% for vote in votes %}
+          <div class="dashboard-item">
+            <div class="dashboard-item-left">
+              {% if vote.morceau.pochette %}
+                <img src="{{ vote.morceau.pochette.url }}" class="dashboard-pochette">
+              {% else %}
+                <div class="dashboard-pochette pochette-placeholder">🎵</div>
+              {% endif %}
+              <div class="dashboard-item-info">
+                <span class="dashboard-item-titre">{{ vote.morceau.titre }}</span>
+                <span class="dashboard-item-meta">{{ vote.morceau.artiste.nom_artiste }}</span>
+              </div>
+            </div>
+            <a href="{% url 'detail_morceau' vote.morceau.id %}" class="btn btn-ghost btn-sm">Voir →</a>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-block"><p>Aucun vote pour le moment.</p></div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.profil-public-container { max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 2rem; }
+.profil-public-header    { display: flex; align-items: center; gap: 1.5rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2rem; }
+.profil-public-avatar    { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-gold); }
+.profil-public-avatar-placeholder { background: var(--accent-gold); color: var(--bg-primary); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; }
+.profil-public-info h1   { font-family: var(--font-title); font-size: 1.8rem; }
+.profil-public-username  { color: var(--text-muted); font-size: 0.9rem; }
+.profil-public-pays      { color: var(--text-muted); font-size: 0.85rem; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
+.stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem; text-align: center; }
+.stat-number { font-size: 2rem; font-weight: 700; color: var(--accent-gold); display: block; }
+.stat-label { color: var(--text-muted); font-size: 0.9rem; }
+.section-title { font-family: var(--font-title); font-size: 1.5rem; margin-bottom: 1rem; }
+</style>
+{% endblock %}

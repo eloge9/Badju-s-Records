@@ -1448,3 +1448,301 @@ textarea {
     gap: 0.75rem;
   }
 }
+
+/* ─────────────────────────────────────────────
+   HEADER MINIMALISTE
+───────────────────────────────────────────── */
+.main-header {
+  position: sticky;
+  top: 0;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.header-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* Branding */
+.header-brand {
+  flex-shrink: 0;
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+.brand-link:hover {
+  color: var(--accent-gold);
+}
+
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.brand-text {
+  font-family: var(--font-title);
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+/* Recherche globale */
+.header-search {
+  flex: 1;
+  max-width: 600px;
+}
+
+.search-form {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 3rem 0.75rem 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+  transition: var(--transition);
+}
+
+.search-input:focus {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.1);
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-btn {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.search-btn:hover {
+  color: var(--accent-gold);
+}
+
+/* Zone utilisateur */
+.header-user {
+  flex-shrink: 0;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.user-avatar-link {
+  display: block;
+  text-decoration: none;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  transition: var(--transition);
+}
+
+.user-avatar:hover {
+  border-color: var(--accent-gold);
+}
+
+.user-avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  color: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: 2px solid var(--border);
+  transition: var(--transition);
+}
+
+.user-avatar-placeholder:hover {
+  border-color: var(--accent-gold);
+}
+
+.user-role-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.badge-utilisateur {
+  background: rgba(160, 160, 176, 0.2);
+  color: var(--text-muted);
+}
+
+.badge-artiste {
+  background: rgba(245, 166, 35, 0.2);
+  color: var(--accent-gold);
+}
+
+.badge-administrateur {
+  background: rgba(255, 68, 68, 0.2);
+  color: var(--accent-red);
+}
+
+/* Boutons authentification */
+.auth-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header-container {
+    padding: 0 1rem;
+    gap: 1rem;
+  }
+
+  .brand-text {
+    display: none;
+  }
+
+  .brand-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .header-search {
+    flex: 1;
+  }
+
+  .search-input {
+    padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .user-avatar,
+  .user-avatar-placeholder {
+    width: 32px;
+    height: 32px;
+  }
+
+  .user-role-badge {
+    display: none;
+  }
+
+  .auth-buttons .btn-ghost {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-container {
+    height: 60px;
+  }
+
+  .search-input::placeholder {
+    font-size: 0.8rem;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   MESSAGES TEMPORAIRES
+───────────────────────────────────────────── */
+.message {
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-md);
+  border-left: 4px solid;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  position: relative;
+  animation: slideIn 0.3s ease-out;
+  box-shadow: var(--shadow);
+}
+
+.message-success {
+  border-left-color: var(--accent-green);
+  background: rgba(0, 255, 135, 0.1);
+}
+
+.message-error {
+  border-left-color: var(--accent-red);
+  background: rgba(255, 68, 68, 0.1);
+}
+
+.message-info {
+  border-left-color: var(--accent-gold);
+  background: rgba(245, 166, 35, 0.1);
+}
+
+.message-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.message-close:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.btn-vote-fait {
+  background: var(--accent-green) !important;
+  color: var(--bg-primary) !important;
+  border-color: var(--accent-green) !important;
+}

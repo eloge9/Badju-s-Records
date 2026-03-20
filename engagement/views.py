@@ -2,7 +2,10 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
-from models_app.models import Morceau, Video, Vote, Telechargement, VueVideo, LikeVideo, CommentaireVideo, Publicite
+from models_app.models import (
+    Morceau, Video, Vote, Telechargement,
+    VueVideo, LikeVideo, CommentaireVideo, Abonnement, ProfilArtiste, EcouteMorceau
+)
 
 
 @login_required
@@ -39,9 +42,10 @@ def valider_telechargement(request, morceau_id):
         pub_vue    = pub_vue,
     )
 
-    if pub_vue:
-        morceau.points += 10
-        morceau.save(update_fields=['points'])
+    # Ajouter des points pour le téléchargement
+    points_bonus = 15 if pub_vue else 10  # Plus de points si pub vue
+    morceau.points += points_bonus
+    morceau.save(update_fields=['points'])
 
     return JsonResponse({
         'succes': True,
@@ -155,3 +159,76 @@ def get_pub_telechargement(request):
         })
     else:
         return JsonResponse({'succes': False})
+
+
+@require_POST
+def enregistrer_ecoute(request, morceau_id):
+    """Enregistrer une écoute de morceau et ajouter des points"""
+    morceau    = get_object_or_404(Morceau, id=morceau_id, statut='valide')
+    session_id = request.session.session_key
+    ip_address = request.META.get('REMOTE_ADDR', '0.0.0.0')
+    duree      = request.POST.get('duree', 0)
+
+    if not session_id:
+        request.session.create()
+        session_id = request.session.session_key
+
+    # Vérifier si déjà écouté récemment (éviter les abus)
+    from django.utils import timezone
+    from datetime import timedelta
+    limite = timezone.now() - timedelta(minutes=5)
+
+    deja_ecoute = EcouteMorceau.objects.filter(
+        morceau    = morceau,
+        session_id = session_id,
+        created_at__gte = limite
+    ).exists()
+
+    if not deja_ecoute:
+        # Enregistrer l'écoute
+        EcouteMorceau.objects.create(
+            morceau    = morceau,
+            user       = request.user if request.user.is_authenticated else None,
+            session_id = session_id,
+            ip_address = ip_address,
+            duree      = int(duree) if duree else None
+        )
+
+        # Ajouter des points à l'artiste
+        points_ecoute = 3  # 3 points par écoute
+        morceau.points += points_ecoute
+        morceau.save(update_fields=['points'])
+
+        return JsonResponse({
+            'succes': True,
+            'points': points_ecoute,
+            'message': f'Écoute enregistrée ! +{points_ecoute} points'
+        })
+    else:
+        return JsonResponse({
+            'succes': False,
+            'message': 'Déjà compté récemment'
+        })
+
+
+@login_required
+@require_POST
+def abonner(request, artiste_id):
+    artiste    = get_object_or_404(ProfilArtiste, id=artiste_id)
+    abonnement = Abonnement.objects.filter(
+                     abonne=request.user,
+                     artiste=artiste
+                 ).first()
+
+    if abonnement:
+        abonnement.delete()
+        est_abonne = False
+    else:
+        Abonnement.objects.create(abonne=request.user, artiste=artiste)
+        est_abonne = True
+
+    return JsonResponse({
+        'succes':      True,
+        'est_abonne':  est_abonne,
+        'nb_abonnes':  artiste.abonnes.count(),
+    })

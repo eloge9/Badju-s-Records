@@ -1,401 +1,1335 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ action }} une vidéo - Badju's Records{% endblock %}
+{% block title %}Ajouter une vidéo — Badju's Records{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+
+  <!-- ── EN-TÊTE ── -->
+  <div class="upload-header">
+    <h1 class="upload-titre">🎬 Ajouter une vidéo</h1>
+    <p class="upload-sous-titre">Publie ton clip sur Badju TV</p>
+
+    <div class="upload-steps">
+      <div class="upload-step active" id="step-indicator-1">
+        <span class="step-num">1</span>
+        <span class="step-label">Infos</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="upload-step" id="step-indicator-2">
+        <span class="step-num">2</span>
+        <span class="step-label">Source</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="upload-step" id="step-indicator-3">
+        <span class="step-num">3</span>
+        <span class="step-label">Miniature</span>
+      </div>
+    </div>
+  </div>
+
+  <form method="POST" enctype="multipart/form-data" id="form-video">
+    {% csrf_token %}
+
+    <!-- ══ ÉTAPE 1 — Informations ══ -->
+    <div class="upload-step-content active" id="step-1">
+
+      <!-- Titre -->
+      <div class="upload-field">
+        <label class="upload-label">
+          Titre de la vidéo <span class="required">*</span>
+        </label>
+        <input type="text" name="titre" id="id_titre" class="upload-input"
+          placeholder="Ex : Lomé by Night — Clip officiel" value="{{ form.titre.value|default:'' }}" required>
+        {% if form.titre.errors %}
+        <span class="upload-error">{{ form.titre.errors.0 }}</span>
+        {% endif %}
+      </div>
+
+      <!-- Description -->
+      <div class="upload-field">
+        <label class="upload-label">
+          Description
+          <span class="upload-badge-optionnel">Optionnel</span>
+        </label>
+        <textarea name="description" id="id_description" class="upload-input"
+          placeholder="Décris ta vidéo, les paroles, le contexte..." rows="3"
+          style="resize:vertical;">{{ form.description.value|default:'' }}</textarea>
+        {% if form.description.errors %}
+        <span class="upload-error">{{ form.description.errors.0 }}</span>
+        {% endif %}
+        <span class="upload-help">
+          Cette description sera affichée sur la page de ta vidéo.
+        </span>
+      </div>
+
+      <!-- Lier au morceau -->
+      <div class="upload-field">
+        <label class="upload-label">
+          🎵 Lier à un morceau
+          <span class="upload-badge-optionnel">Optionnel</span>
+        </label>
+
+        <input type="hidden" name="morceau" id="morceau-selectionne" value="">
+
+        <!-- Champ recherche -->
+        <div class="morceau-search-wrap">
+          <span class="morceau-search-icon">🔍</span>
+          <input type="text" id="morceau-search" class="upload-input morceau-search-input"
+            placeholder="Tape le nom d'un morceau..." autocomplete="off" oninput="filtrerMorceaux(this.value)"
+            onfocus="ouvrirListe()">
+        </div>
+
+        <!-- Morceau sélectionné -->
+        <div id="morceau-choisi" class="morceau-choisi-card" style="display:none;">
+          <img id="morceau-choisi-pochette" src="" alt="" class="morceau-choisi-img" style="display:none;">
+          <div class="morceau-choisi-placeholder" id="morceau-choisi-placeholder">🎵</div>
+          <div class="morceau-choisi-info">
+            <span id="morceau-choisi-titre" class="morceau-choisi-titre"></span>
+            <span id="morceau-choisi-meta" class="morceau-choisi-meta"></span>
+          </div>
+          <button type="button" class="morceau-choisi-clear" onclick="effacerChoix()">✕</button>
+        </div>
+
+        <!-- Liste morceaux -->
+        <div id="morceaux-liste" class="morceaux-liste">
+
+          <div class="picker-option selected" id="option-aucun" onclick="choisirMorceau(null, '', '', '', this)">
+            <div class="picker-option-icon">🚫</div>
+            <div class="picker-option-text">
+              <span class="picker-option-titre">Aucun morceau</span>
+              <span class="picker-option-meta">Vidéo indépendante</span>
+            </div>
+            <span class="picker-check">✓</span>
+          </div>
+
+          {% for morceau in form.morceau.field.queryset %}
+          <div class="picker-option" data-id="{{ morceau.id }}" data-titre="{{ morceau.titre|lower }}"
+            data-pochette="{% if morceau.pochette %}{{ morceau.pochette.url }}{% endif %}"
+            data-meta="{{ morceau.points }} pts · {{ morceau.get_genre_display }}" onclick="choisirMorceau(
+                {{ morceau.id }},
+                '{{ morceau.titre|escapejs }}',
+                '{% if morceau.pochette %}{{ morceau.pochette.url }}{% endif %}',
+                '{{ morceau.points }} pts · {{ morceau.get_genre_display }}',
+                this
+              )">
+            {% if morceau.pochette %}
+            <img src="{{ morceau.pochette.url }}" alt="{{ morceau.titre }}" class="picker-option-pochette">
+            {% else %}
+            <div class="picker-option-icon">🎵</div>
+            {% endif %}
+            <div class="picker-option-text">
+              <span class="picker-option-titre">{{ morceau.titre }}</span>
+              <span class="picker-option-meta">
+                {{ morceau.points }} pts · {{ morceau.get_genre_display }}
+              </span>
+            </div>
+            <span class="picker-check">✓</span>
+          </div>
+          {% empty %}
+          <div class="picker-vide-message">
+            <p>Aucun morceau validé disponible.</p>
+            <a href="{% url 'ajouter_morceau' %}" class="btn btn-outline btn-sm">
+              + Ajouter un morceau d'abord
+            </a>
+          </div>
+          {% endfor %}
+
+        </div>
+
+        <div class="upload-info-box">
+          💡 Lier une vidéo à un morceau = chaque vue rapporte
+          <strong>+2 points</strong> au morceau dans le Top 100.
+        </div>
+      </div>
+
+      <div class="upload-nav">
+        <span></span>
+        <button type="button" class="btn btn-gold" onclick="allerEtape(2)">
+          Suivant →
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ ÉTAPE 2 — Source vidéo ══ -->
+    <div class="upload-step-content" id="step-2">
+
+      <div class="source-choix">
+        <button type="button" class="source-btn active" id="btn-fichier" onclick="switchSource('fichier')">
+          📁 Fichier vidéo
+        </button>
+        <button type="button" class="source-btn" id="btn-youtube" onclick="switchSource('youtube')">
+          ▶ Lien YouTube
+        </button>
+      </div>
+
+      <!-- Fichier -->
+      <div id="zone-fichier" class="upload-field">
+        <label class="upload-label">
+          Fichier vidéo (MP4, WEBM, MOV — max 500 MB)
+        </label>
+        <div class="dropzone" id="dropzone-video" onclick="document.getElementById('id_fichier_video').click()"
+          ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFichier(event, 'video')">
+          <div class="dropzone-content" id="dropzone-video-content">
+            <span class="dropzone-icon">🎬</span>
+            <p class="dropzone-titre">Glisse ta vidéo ici</p>
+            <p class="dropzone-sous">ou clique pour choisir</p>
+            <p class="dropzone-formats">MP4 · WEBM · MOV — max 500 MB</p>
+          </div>
+          <video id="apercu-video" style="display:none;width:100%;max-height:280px;border-radius:10px;" controls>
+          </video>
+        </div>
+        <input type="file" name="fichier_video" id="id_fichier_video" accept="video/mp4,video/webm,video/quicktime"
+          style="display:none" onchange="previewVideo(this)">
+        {% if form.fichier_video.errors %}
+        <span class="upload-error">{{ form.fichier_video.errors.0 }}</span>
+        {% endif %}
+        <div id="progress-video" style="display:none;">
+          <div class="progress-header">
+            <span id="progress-video-nom"></span>
+            <span id="progress-video-pct">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progress-video-bar"></div>
+          </div>
+          <span id="progress-video-taille" class="progress-taille"></span>
+        </div>
+      </div>
+
+      <!-- YouTube -->
+      <div id="zone-youtube" style="display:none;" class="upload-field">
+        <label class="upload-label">Lien YouTube</label>
+        <input type="url" name="youtube_url" id="id_youtube_url" class="upload-input"
+          placeholder="https://youtube.com/watch?v=..." value="{{ form.youtube_url.value|default:'' }}"
+          oninput="previewYoutube(this.value)">
+        <span class="upload-help">Colle le lien complet de ta vidéo YouTube</span>
+        {% if form.youtube_url.errors %}
+        <span class="upload-error">{{ form.youtube_url.errors.0 }}</span>
+        {% endif %}
+        <div id="apercu-youtube" style="display:none;margin-top:0.75rem;">
+          <iframe class="yt-video" src="{{ video.youtube_embed_url }}?rel=0&modestbranding=1&autoplay=1" frameborder="0"
+            allowfullscreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerpolicy="strict-origin-when-cross-origin">
+          </iframe>
+          <p style="color:var(--accent-green);font-size:0.82rem;margin-top:0.4rem;">
+            ✅ Lien YouTube valide
+          </p>
+        </div>
+      </div>
+
+      <div class="upload-nav">
+        <button type="button" class="btn btn-ghost" onclick="allerEtape(1)">
+          ← Retour
+        </button>
+        <button type="button" class="btn btn-gold" onclick="allerEtape(3)">
+          Suivant →
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ ÉTAPE 3 — Miniature ══ -->
+    <div class="upload-step-content" id="step-3">
+
+      <div class="upload-field">
+        <label class="upload-label">
+          Image de couverture
+          <span class="upload-badge-optionnel">Optionnel</span>
+        </label>
+        <div class="dropzone" id="dropzone-thumbnail" onclick="document.getElementById('id_thumbnail').click()"
+          ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFichier(event, 'thumbnail')">
+          <div class="dropzone-content" id="dropzone-thumb-content">
+            <span class="dropzone-icon">🖼️</span>
+            <p class="dropzone-titre">Glisse l'image ici</p>
+            <p class="dropzone-sous">ou clique pour choisir</p>
+            <p class="dropzone-formats">JPG · PNG · WEBP — max 5 MB · Recommandé 1280×720</p>
+          </div>
+          <img id="apercu-thumbnail"
+            style="display:none;width:100%;max-height:200px;object-fit:cover;border-radius:10px;" src="" alt="aperçu">
+        </div>
+        <input type="file" name="thumbnail" id="id_thumbnail" accept="image/jpeg,image/png,image/webp"
+          style="display:none" onchange="previewThumbnail(this)">
+        {% if form.thumbnail.errors %}
+        <span class="upload-error">{{ form.thumbnail.errors.0 }}</span>
+        {% endif %}
+        <p class="upload-help">
+          Si vide, la première image de la vidéo sera utilisée.
+        </p>
+      </div>
+
+      <!-- Récapitulatif -->
+      <div class="recap-card">
+        <h3 class="recap-titre">📋 Récapitulatif</h3>
+        <div class="recap-ligne">
+          <span class="recap-label">Titre</span>
+          <span class="recap-val" id="recap-titre">—</span>
+        </div>
+        <div class="recap-ligne">
+          <span class="recap-label">Description</span>
+          <span class="recap-val" id="recap-description">—</span>
+        </div>
+        <div class="recap-ligne">
+          <span class="recap-label">Morceau lié</span>
+          <span class="recap-val" id="recap-morceau">Aucun</span>
+        </div>
+        <div class="recap-ligne">
+          <span class="recap-label">Source</span>
+          <span class="recap-val" id="recap-source">—</span>
+        </div>
+      </div>
+
+      {% if form.non_field_errors %}
+      <div class="upload-error-global">{{ form.non_field_errors.0 }}</div>
+      {% endif %}
+
+      <div class="upload-nav">
+        <button type="button" class="btn btn-ghost" onclick="allerEtape(2)">
+          ← Retour
+        </button>
+        <button type="submit" class="btn btn-gold" id="btn-submit">
+          🎬 Publier la vidéo
+        </button>
+      </div>
+
+    </div>
+  </form>
+
+  <!-- ── OVERLAY ── -->
+  <div id="overlay-upload" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);
+           z-index:9999;align-items:center;justify-content:center;">
+    <div class="overlay-box">
+      <div class="overlay-spinner"></div>
+      <p class="overlay-titre">Publication en cours...</p>
+      <div class="overlay-progress-bg">
+        <div class="overlay-progress-fill" id="overlay-progress-fill"></div>
+      </div>
+      <p class="overlay-pct" id="overlay-pct">0%</p>
+      <p style="color:var(--text-muted);font-size:0.8rem;">Ne ferme pas cette page</p>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+
+  let etapeActuelle = 1;
+  let morceauNomSelectionne = 'Aucun';
+  let sourceMode = 'fichier';
+  let listeOuverte = true;
+
+  // ─────────────────────────────────────────────
+  // NAVIGATION ÉTAPES
+  // ─────────────────────────────────────────────
+
+  function allerEtape(num) {
+    if (num > 1) {
+      const titre = document.getElementById('id_titre').value.trim();
+      if (!titre) {
+        const input = document.getElementById('id_titre');
+        input.focus();
+        input.style.borderColor = 'var(--accent-red)';
+        return;
+      }
+      document.getElementById('id_titre').style.borderColor = '';
+    }
+
+    if (num > 2) {
+      const fichier = document.getElementById('id_fichier_video').files[0];
+      const youtube = document.getElementById('id_youtube_url').value.trim();
+      if (sourceMode === 'fichier' && !fichier) {
+        alert('Sélectionne un fichier vidéo ou choisis "Lien YouTube".');
+        return;
+      }
+      if (sourceMode === 'youtube' && !youtube) {
+        document.getElementById('id_youtube_url').focus();
+        return;
+      }
+      mettreAJourRecap();
+    }
+
+    document.querySelectorAll('.upload-step-content').forEach(function (s) {
+      s.classList.remove('active');
+    });
+    document.querySelectorAll('.upload-step').forEach(function (s) {
+      s.classList.remove('active', 'done');
+    });
+
+    document.getElementById('step-' + num).classList.add('active');
+    document.getElementById('step-indicator-' + num).classList.add('active');
+
+    for (var i = 1; i < num; i++) {
+      document.getElementById('step-indicator-' + i).classList.add('done');
+    }
+
+    etapeActuelle = num;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ─────────────────────────────────────────────
+  // RECHERCHE ET SÉLECTION MORCEAU
+  // ─────────────────────────────────────────────
+
+  function ouvrirListe() {
+    document.getElementById('morceaux-liste').style.display = 'flex';
+    listeOuverte = true;
+  }
+
+  function filtrerMorceaux(query) {
+    var q = query.toLowerCase().trim();
+    var options = document.querySelectorAll('#morceaux-liste .picker-option');
+
+    // Ouvrir la liste si elle était fermée
+    document.getElementById('morceaux-liste').style.display = 'flex';
+    listeOuverte = true;
+
+    options.forEach(function (option) {
+      if (option.id === 'option-aucun') {
+        option.style.display = '';
+        return;
+      }
+      var titre = option.getAttribute('data-titre') || '';
+      if (!q || titre.includes(q)) {
+        option.style.display = '';
+      } else {
+        option.style.display = 'none';
+      }
+    });
+  }
+
+  function choisirMorceau(id, titre, pochette, meta, element) {
+    // Désélectionner tous
+    document.querySelectorAll('.picker-option').forEach(function (o) {
+      o.classList.remove('selected');
+    });
+    element.classList.add('selected');
+
+    document.getElementById('morceau-selectionne').value = id || '';
+    morceauNomSelectionne = titre || 'Aucun';
+
+    if (id) {
+      // Afficher la carte du morceau choisi
+      var card = document.getElementById('morceau-choisi');
+      var img = document.getElementById('morceau-choisi-pochette');
+      var placeholder = document.getElementById('morceau-choisi-placeholder');
+      var titreEl = document.getElementById('morceau-choisi-titre');
+      var metaEl = document.getElementById('morceau-choisi-meta');
+
+      titreEl.textContent = titre;
+      metaEl.textContent = meta || '';
+
+      if (pochette) {
+        img.src = pochette;
+        img.style.display = 'block';
+        placeholder.style.display = 'none';
+      } else {
+        img.style.display = 'none';
+        placeholder.style.display = 'flex';
+      }
+
+      card.style.display = 'flex';
+
+      // Masquer la liste et vider la recherche
+      document.getElementById('morceaux-liste').style.display = 'none';
+      document.getElementById('morceau-search').value = '';
+      listeOuverte = false;
+
+    } else {
+      // Aucun morceau sélectionné
+      document.getElementById('morceau-choisi').style.display = 'none';
+      document.getElementById('morceaux-liste').style.display = 'flex';
+      document.getElementById('morceau-search').value = '';
+      morceauNomSelectionne = 'Aucun';
+      filtrerMorceaux('');
+    }
+  }
+
+  function effacerChoix() {
+    document.getElementById('morceau-selectionne').value = '';
+    document.getElementById('morceau-choisi').style.display = 'none';
+    document.getElementById('morceaux-liste').style.display = 'flex';
+    document.getElementById('morceau-search').value = '';
+    morceauNomSelectionne = 'Aucun';
+
+    document.querySelectorAll('.picker-option').forEach(function (o) {
+      o.classList.remove('selected');
+    });
+    var aucun = document.getElementById('option-aucun');
+    if (aucun) aucun.classList.add('selected');
+
+    filtrerMorceaux('');
+  }
+
+  // Fermer la liste si on clique ailleurs
+  document.addEventListener('click', function (e) {
+    var liste = document.getElementById('morceaux-liste');
+    var search = document.getElementById('morceau-search');
+    var choisi = document.getElementById('morceau-choisi');
+    if (!liste || !search) return;
+
+    if (!liste.contains(e.target) &&
+      !search.contains(e.target) &&
+      !choisi.contains(e.target)) {
+      // Fermer seulement si un morceau est sélectionné
+      var id = document.getElementById('morceau-selectionne').value;
+      if (id) {
+        liste.style.display = 'none';
+        listeOuverte = false;
+      }
+    }
+  });
+
+  // ─────────────────────────────────────────────
+  // SWITCH SOURCE
+  // ─────────────────────────────────────────────
+
+  function switchSource(type) {
+    sourceMode = type;
+    var zoneFichier = document.getElementById('zone-fichier');
+    var zoneYoutube = document.getElementById('zone-youtube');
+    var btnFichier = document.getElementById('btn-fichier');
+    var btnYoutube = document.getElementById('btn-youtube');
+
+    if (type === 'fichier') {
+      zoneFichier.style.display = '';
+      zoneYoutube.style.display = 'none';
+      btnFichier.classList.add('active');
+      btnYoutube.classList.remove('active');
+      document.getElementById('id_youtube_url').value = '';
+    } else {
+      zoneFichier.style.display = 'none';
+      zoneYoutube.style.display = '';
+      btnFichier.classList.remove('active');
+      btnYoutube.classList.add('active');
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // PREVIEWS
+  // ─────────────────────────────────────────────
+
+  function previewVideo(input) {
+    var fichier = input.files[0];
+    if (!fichier) return;
+
+    if (fichier.size > 500 * 1024 * 1024) {
+      alert('Le fichier dépasse 500 MB.');
+      input.value = '';
+      return;
+    }
+
+    var url = URL.createObjectURL(fichier);
+    var video = document.getElementById('apercu-video');
+    var content = document.getElementById('dropzone-video-content');
+    var progress = document.getElementById('progress-video');
+
+    video.src = url;
+    video.style.display = 'block';
+    content.style.display = 'none';
+    progress.style.display = 'block';
+
+    document.getElementById('progress-video-nom').textContent = fichier.name;
+    document.getElementById('progress-video-taille').textContent =
+      (fichier.size / 1024 / 1024).toFixed(1) + ' MB';
+
+    simulerProgression('progress-video-bar', 'progress-video-pct', 100);
+  }
+
+  function previewYoutube(url) {
+    var apercu = document.getElementById('apercu-youtube');
+    var iframe = document.getElementById('youtube-iframe');
+    var videoId = null;
+
+    if (url.includes('watch?v=')) {
+      videoId = url.split('watch?v=')[1].split('&')[0];
+    } else if (url.includes('youtu.be/')) {
+      videoId = url.split('youtu.be/')[1].split('?')[0];
+    }
+
+    if (videoId) {
+      iframe.src = 'https://www.youtube.com/embed/' + videoId;
+      apercu.style.display = 'block';
+    } else {
+      apercu.style.display = 'none';
+    }
+  }
+
+  function previewThumbnail(input) {
+    var fichier = input.files[0];
+    if (!fichier) return;
+
+    if (fichier.size > 5 * 1024 * 1024) {
+      alert("L'image dépasse 5 MB.");
+      input.value = '';
+      return;
+    }
+
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var img = document.getElementById('apercu-thumbnail');
+      var content = document.getElementById('dropzone-thumb-content');
+      img.src = e.target.result;
+      img.style.display = 'block';
+      content.style.display = 'none';
+    };
+    reader.readAsDataURL(fichier);
+  }
+
+  // ─────────────────────────────────────────────
+  // DRAG & DROP
+  // ─────────────────────────────────────────────
+
+  function dragOver(event) {
+    event.preventDefault();
+    event.currentTarget.classList.add('dropzone-drag');
+  }
+  function dragLeave(event) {
+    event.currentTarget.classList.remove('dropzone-drag');
+  }
+  function dropFichier(event, type) {
+    event.preventDefault();
+    event.currentTarget.classList.remove('dropzone-drag');
+    var fichier = event.dataTransfer.files[0];
+    if (!fichier) return;
+    if (type === 'video') {
+      var input = document.getElementById('id_fichier_video');
+      var dt = new DataTransfer();
+      dt.items.add(fichier);
+      input.files = dt.files;
+      previewVideo(input);
+    } else {
+      var input = document.getElementById('id_thumbnail');
+      var dt = new DataTransfer();
+      dt.items.add(fichier);
+      input.files = dt.files;
+      previewThumbnail(input);
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // RÉCAPITULATIF
+  // ─────────────────────────────────────────────
+
+  function mettreAJourRecap() {
+    var titre = document.getElementById('id_titre').value.trim();
+    var description = document.getElementById('id_description').value.trim();
+    var fichier = document.getElementById('id_fichier_video').files[0];
+    var youtube = document.getElementById('id_youtube_url').value.trim();
+
+    document.getElementById('recap-titre').textContent = titre || '—';
+    document.getElementById('recap-morceau').textContent = morceauNomSelectionne;
+    document.getElementById('recap-description').textContent =
+      description ? description.substring(0, 60) + (description.length > 60 ? '...' : '') : '—';
+
+    if (sourceMode === 'fichier' && fichier) {
+      document.getElementById('recap-source').textContent =
+        '📁 ' + fichier.name + ' (' + (fichier.size / 1024 / 1024).toFixed(1) + ' MB)';
+    } else if (sourceMode === 'youtube' && youtube) {
+      document.getElementById('recap-source').textContent = '▶ ' + youtube;
+    } else {
+      document.getElementById('recap-source').textContent = '—';
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // SIMULER PROGRESSION
+  // ─────────────────────────────────────────────
+
+  function simulerProgression(barId, pctId, max) {
+    var val = 0;
+    var interval = setInterval(function () {
+      val = Math.min(val + Math.random() * 15, max);
+      var bar = document.getElementById(barId);
+      var pct = document.getElementById(pctId);
+      if (bar) bar.style.width = val + '%';
+      if (pct) pct.textContent = Math.floor(val) + '%';
+      if (val >= max) clearInterval(interval);
+    }, 100);
+  }
+
+  // ─────────────────────────────────────────────
+  // SOUMISSION
+  // ─────────────────────────────────────────────
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var form = document.getElementById('form-video');
+    if (!form) return;
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+
+      var overlay = document.getElementById('overlay-upload');
+      var fill = document.getElementById('overlay-progress-fill');
+      var pct = document.getElementById('overlay-pct');
+
+      overlay.style.display = 'flex';
+      fill.style.width = '0%';
+      pct.textContent = '0%';
+
+      var formData = new FormData(form);
+      var xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', function (e) {
+        if (e.lengthComputable) {
+          var reel = Math.floor((e.loaded / e.total) * 100);
+          fill.style.width = reel + '%';
+          pct.textContent = reel + '%';
+        }
+      });
+
+      xhr.addEventListener('load', function () {
+        fill.style.width = '100%';
+        pct.textContent = '100%';
+        setTimeout(function () {
+          window.location.href = '/dashboard/';
+        }, 600);
+      });
+
+      xhr.addEventListener('error', function () {
+        overlay.style.display = 'none';
+        alert("Erreur lors de l'upload. Réessaie.");
+      });
+
+      xhr.open('POST', form.action || window.location.href);
+      xhr.send(formData);
+    });
+  });
+
+</script>
+{% endblock %}
+
 
 {% block extra_css %}
 <style>
-.form-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
+  .upload-container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
 
-.form-header h1 {
-  font-size: 2rem;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-  font-family: var(--font-title);
-}
+  /* ── Header ── */
+  .upload-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
 
-.form-header p {
-  color: var(--text-muted);
-}
+  .upload-titre {
+    font-family: var(--font-title);
+    font-size: 2rem;
+    letter-spacing: 1px;
+  }
 
-.form-container {
-  max-width: 800px;
-  margin: 0 auto;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 3rem;
-}
+  .upload-sous-titre {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-top: 0.3rem;
+  }
 
-.form-group {
-  margin-bottom: 1.5rem;
-}
+  /* ── Étapes ── */
+  .upload-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1.5rem;
+  }
 
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: var(--text-primary);
-  font-weight: 500;
-}
+  .upload-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+  }
 
-.form-group input,
-.form-group textarea,
-.form-group select {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  font-size: 1rem;
-  transition: var(--transition);
-}
+  .step-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: var(--transition);
+  }
 
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: var(--accent-gold);
-}
+  .step-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    transition: var(--transition);
+  }
 
-.form-group textarea {
-  resize: vertical;
-  min-height: 100px;
-}
+  .step-line {
+    width: 60px;
+    height: 2px;
+    background: var(--border);
+    margin: 0 0.3rem 1.2rem;
+  }
 
-.form-help {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-top: 0.25rem;
-}
+  .upload-step.active .step-num {
+    background: var(--accent-gold);
+    border-color: var(--accent-gold);
+    color: var(--bg-primary);
+  }
 
-.radio-group {
-  display: flex;
-  gap: 2rem;
-  margin-bottom: 1rem;
-}
+  .upload-step.active .step-label {
+    color: var(--accent-gold);
+    font-weight: 600;
+  }
 
-.radio-option {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
+  .upload-step.done .step-num {
+    background: var(--accent-green);
+    border-color: var(--accent-green);
+    color: var(--bg-primary);
+  }
 
-.radio-option input[type="radio"] {
-  width: auto;
-  margin: 0;
-}
+  .upload-step.done .step-num::before {
+    content: '✓';
+  }
 
-.file-upload {
-  border: 2px dashed var(--border);
-  border-radius: var(--radius-md);
-  padding: 2rem;
-  text-align: center;
-  transition: var(--transition);
-  cursor: pointer;
-  margin-bottom: 1rem;
-}
-
-.file-upload:hover {
-  border-color: var(--accent-gold);
-  background: var(--bg-secondary);
-}
-
-.file-upload.has-file {
-  border-style: solid;
-  border-color: var(--accent-gold);
-}
-
-.upload-icon {
-  font-size: 3rem;
-  color: var(--text-muted);
-  margin-bottom: 1rem;
-}
-
-.upload-text {
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-}
-
-.upload-hint {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
-.form-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin-top: 2rem;
-}
-
-.btn-submit {
-  background: var(--accent-gold);
-  color: var(--bg-primary);
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: var(--radius-md);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.btn-submit:hover {
-  background: var(--accent-gold-hover);
-  transform: translateY(-2px);
-}
-
-.btn-cancel {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border);
-  padding: 1rem 2rem;
-  border-radius: var(--radius-md);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  text-decoration: none;
-  display: inline-block;
-}
-
-.btn-cancel:hover {
-  background: var(--bg-card);
-  border-color: var(--accent-gold);
-  color: var(--accent-gold);
-}
-
-.error {
-  color: var(--accent-red);
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
-}
-
-.youtube-input {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .form-container {
+  /* ── Step content ── */
+  .upload-step-content {
+    display: none;
+    flex-direction: column;
+    gap: 1.2rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
     padding: 2rem;
   }
-  
-  .radio-group {
+
+  .upload-step-content.active {
+    display: flex;
+  }
+
+  /* ── Champs ── */
+  .upload-field {
+    display: flex;
     flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .upload-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .required {
+    color: var(--accent-red);
+  }
+
+  .upload-badge-optionnel {
+    font-size: 0.7rem;
+    background: rgba(160, 160, 176, 0.15);
+    color: var(--text-muted);
+    border-radius: 20px;
+    padding: 1px 8px;
+    font-weight: 400;
+  }
+
+  .upload-input {
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    outline: none;
+    transition: var(--transition);
+    width: 100%;
+  }
+
+  .upload-input:focus {
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.1);
+  }
+
+  .upload-help {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+
+  .upload-error {
+    color: var(--accent-red);
+    font-size: 0.82rem;
+  }
+
+  .upload-error-global {
+    background: rgba(255, 68, 68, 0.1);
+    border: 1px solid rgba(255, 68, 68, 0.3);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    color: var(--accent-red);
+    font-size: 0.88rem;
+  }
+
+  .upload-info-box {
+    background: rgba(245, 166, 35, 0.08);
+    border: 1px solid rgba(245, 166, 35, 0.2);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  .upload-info-box strong {
+    color: var(--accent-gold);
+  }
+
+  /* ── Recherche morceau ── */
+  .morceau-search-wrap {
+    position: relative;
+  }
+
+  .morceau-search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.9rem;
+    pointer-events: none;
+  }
+
+  .morceau-search-input {
+    padding-left: 2.2rem !important;
+  }
+
+  /* ── Liste morceaux ── */
+  .morceaux-liste {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.4rem;
+    background: var(--bg-secondary);
+  }
+
+  .morceaux-liste::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .morceaux-liste::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .morceaux-liste::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 2px;
+  }
+
+  /* ── Options picker ── */
+  .picker-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    background: var(--bg-card);
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .picker-option:hover {
+    border-color: var(--border-hover);
+    background: var(--bg-card-hover);
+  }
+
+  .picker-option.selected {
+    border-color: var(--accent-gold);
+    background: rgba(245, 166, 35, 0.06);
+  }
+
+  .picker-option-pochette {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .picker-option-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .picker-option-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  .picker-option-titre {
+    font-weight: 600;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .picker-option-meta {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+  }
+
+  .picker-check {
+    color: var(--accent-gold);
+    font-size: 1rem;
+    opacity: 0;
+    transition: var(--transition);
+    flex-shrink: 0;
+  }
+
+  .picker-option.selected .picker-check {
+    opacity: 1;
+  }
+
+  .picker-vide-message {
+    text-align: center;
+    padding: 1rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  /* ── Morceau choisi ── */
+  .morceau-choisi-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: rgba(245, 166, 35, 0.06);
+    border: 2px solid var(--accent-gold);
+    border-radius: var(--radius-md);
+  }
+
+  .morceau-choisi-img {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .morceau-choisi-placeholder {
+    width: 44px;
+    height: 44px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+
+  .morceau-choisi-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  .morceau-choisi-titre {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--accent-gold);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .morceau-choisi-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .morceau-choisi-clear {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.2rem 0.4rem;
+    transition: var(--transition);
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+  }
+
+  .morceau-choisi-clear:hover {
+    color: var(--accent-red);
+    background: rgba(255, 68, 68, 0.1);
+  }
+
+  /* ── Source ── */
+  .source-choix {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .source-btn {
+    flex: 1;
+    padding: 0.75rem;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+  }
+
+  .source-btn.active {
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+    background: rgba(245, 166, 35, 0.06);
+  }
+
+  /* ── Dropzone ── */
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    background: var(--bg-secondary);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dropzone:hover,
+  .dropzone-drag {
+    border-color: var(--accent-gold);
+    background: rgba(245, 166, 35, 0.04);
+  }
+
+  .dropzone-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .dropzone-icon {
+    font-size: 2.5rem;
+  }
+
+  .dropzone-titre {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+  }
+
+  .dropzone-sous {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .dropzone-formats {
+    color: var(--text-dark);
+    font-size: 0.75rem;
+  }
+
+  /* ── Progression ── */
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .progress-bar-bg {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent-gold);
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.2s;
+  }
+
+  .progress-taille {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    display: block;
+    margin-top: 0.3rem;
+  }
+
+  /* ── Récap ── */
+  .recap-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+  }
+
+  .recap-titre {
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .recap-ligne {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
     gap: 1rem;
   }
-  
-  .form-actions {
+
+  .recap-ligne:last-child {
+    border-bottom: none;
+  }
+
+  .recap-label {
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .recap-val {
+    color: var(--text-primary);
+    font-weight: 500;
+    text-align: right;
+    word-break: break-word;
+  }
+
+  /* ── Navigation ── */
+  .upload-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Overlay ── */
+  .overlay-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 2.5rem;
+    text-align: center;
+    width: 100%;
+    max-width: 360px;
+    display: flex;
     flex-direction: column;
+    align-items: center;
+    gap: 1rem;
   }
-}
+
+  .overlay-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--border);
+    border-top: 4px solid var(--accent-gold);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .overlay-titre {
+    font-family: var(--font-title);
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+  }
+
+  .overlay-progress-bg {
+    width: 100%;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .overlay-progress-fill {
+    height: 100%;
+    background: var(--accent-gold);
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.3s;
+  }
+
+  .overlay-pct {
+    font-family: var(--font-title);
+    font-size: 1.5rem;
+    color: var(--accent-gold);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .upload-container {
+      padding: 1rem;
+    }
+
+    .upload-step-content {
+      padding: 1.2rem;
+    }
+
+    .step-line {
+      width: 30px;
+    }
+
+    .source-choix {
+      flex-direction: column;
+    }
+
+    .upload-nav {
+      gap: 0.5rem;
+    }
+
+    .upload-nav .btn {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .recap-val {
+      font-size: 0.78rem;
+    }
+  }
 </style>
-{% endblock %}
-
-{% block content %}
-<div class="main-content">
-  <div class="form-header">
-    <h1>📺 {{ action }} une vidéo</h1>
-    <p>Partagez votre vidéo avec la communauté Badju's Records</p>
-  </div>
-
-  <div class="form-container">
-    <form method="POST" enctype="multipart/form-data">
-      {% csrf_token %}
-      
-      <div class="form-group">
-        <label>Type de vidéo *</label>
-        <div class="radio-group">
-          <div class="radio-option">
-            <input type="radio" id="type_upload" name="type_video" value="upload" checked onchange="toggleVideoType('upload')">
-            <label for="type_upload">Upload de fichier</label>
-          </div>
-          <div class="radio-option">
-            <input type="radio" id="type_youtube" name="type_video" value="youtube" onchange="toggleVideoType('youtube')">
-            <label for="type_youtube">Lien YouTube</label>
-          </div>
-        </div>
-        {% if form.type_video.errors %}
-          <div class="error">{{ form.type_video.errors.0 }}</div>
-        {% endif %}
-      </div>
-
-      <div class="form-group">
-        <label for="titre">Titre *</label>
-        <input 
-          type="text" 
-          id="titre" 
-          name="titre" 
-          value="{{ form.titre.value|default:'' }}"
-          required
-          placeholder="Titre de la vidéo"
-        >
-        {% if form.titre.errors %}
-          <div class="error">{{ form.titre.errors.0 }}</div>
-        {% endif %}
-      </div>
-
-      <div class="form-group">
-        <label for="description">Description</label>
-        <textarea 
-          id="description" 
-          name="description" 
-          placeholder="Décrivez votre vidéo, le contexte, les participants..."
-        >{{ form.description.value|default:'' }}</textarea>
-        <div class="form-help">Maximum 500 caractères</div>
-        {% if form.description.errors %}
-          <div class="error">{{ form.description.errors.0 }}</div>
-        {% endif %}
-      </div>
-
-      <!-- Upload de fichier -->
-      <div id="upload-section" class="form-group">
-        <label>Fichier vidéo *</label>
-        <div class="file-upload" onclick="document.getElementById('fichier_video').click()">
-          <input type="file" id="fichier_video" name="fichier_video" accept="video/*" style="display: none;" onchange="handleVideoSelect(this)" required>
-          <div class="upload-icon">📺</div>
-          <div class="upload-text" id="video-text">Cliquez pour ajouter le fichier vidéo</div>
-          <div class="upload-hint">Formats: MP4, WebM, MOV - Max 500MB</div>
-        </div>
-        {% if form.fichier_video.errors %}
-          <div class="error">{{ form.fichier_video.errors.0 }}</div>
-        {% endif %}
-      </div>
-
-      <!-- Lien YouTube -->
-      <div id="youtube-section" class="form-group youtube-input">
-        <label for="lien_youtube">Lien YouTube *</label>
-        <input 
-          type="url" 
-          id="lien_youtube" 
-          name="lien_youtube" 
-          value="{{ form.lien_youtube.value|default:'' }}"
-          placeholder="https://youtube.com/watch?v=..."
-        >
-        <div class="form-help">Collez l'URL complète de la vidéo YouTube</div>
-        {% if form.lien_youtube.errors %}
-          <div class="error">{{ form.lien_youtube.errors.0 }}</div>
-        {% endif %}
-      </div>
-
-      <div class="form-group">
-        <label>Miniature (optionnel)</label>
-        <div class="file-upload" onclick="document.getElementById('thumbnail').click()">
-          <input type="file" id="thumbnail" name="thumbnail" accept="image/*" style="display: none;" onchange="handleThumbnailSelect(this)">
-          <div class="upload-icon">📷</div>
-          <div class="upload-text" id="thumbnail-text">Cliquez pour ajouter une miniature</div>
-          <div class="upload-hint">Formats: JPG, PNG - Max 5MB</div>
-        </div>
-        {% if form.thumbnail.errors %}
-          <div class="error">{{ form.thumbnail.errors.0 }}</div>
-        {% endif %}
-      </div>
-
-      <div class="form-actions">
-        <button type="submit" class="btn-submit">
-          📺 {{ action }} la vidéo
-        </button>
-        <a href="{% url 'dashboard' %}" class="btn-cancel">
-          Annuler
-        </a>
-      </div>
-    </form>
-  </div>
-</div>
-
-<script>
-function toggleVideoType(type) {
-  const uploadSection = document.getElementById('upload-section');
-  const youtubeSection = document.getElementById('youtube-section');
-  const videoInput = document.getElementById('fichier_video');
-  const youtubeInput = document.getElementById('lien_youtube');
-  
-  if (type === 'upload') {
-    uploadSection.style.display = 'block';
-    youtubeSection.style.display = 'none';
-    videoInput.required = true;
-    youtubeInput.required = false;
-  } else {
-    uploadSection.style.display = 'none';
-    youtubeSection.style.display = 'block';
-    videoInput.required = false;
-    youtubeInput.required = true;
-  }
-}
-
-function handleVideoSelect(input) {
-  const file = input.files[0];
-  const uploadDiv = input.parentElement;
-  const textElement = document.getElementById('video-text');
-  
-  if (file) {
-    // Vérifier la taille (500MB max)
-    if (file.size > 500 * 1024 * 1024) {
-      alert('La vidéo ne doit pas dépasser 500MB');
-      input.value = '';
-      return;
-    }
-    
-    // Vérifier le type
-    const validTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'];
-    if (!validTypes.includes(file.type)) {
-      alert('Veuillez sélectionner un fichier vidéo valide (MP4, WebM, MOV)');
-      input.value = '';
-      return;
-    }
-    
-    uploadDiv.classList.add('has-file');
-    textElement.textContent = `📺 ${file.name}`;
-  }
-}
-
-function handleThumbnailSelect(input) {
-  const file = input.files[0];
-  const uploadDiv = input.parentElement;
-  const textElement = document.getElementById('thumbnail-text');
-  
-  if (file) {
-    // Vérifier la taille (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('L\'image ne doit pas dépasser 5MB');
-      input.value = '';
-      return;
-    }
-    
-    // Vérifier le type
-    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-    if (!validTypes.includes(file.type)) {
-      alert('Veuillez sélectionner une image valide (JPG, PNG)');
-      input.value = '';
-      return;
-    }
-    
-    uploadDiv.classList.add('has-file');
-    textElement.textContent = `📷 ${file.name}`;
-  }
-}
-
-// Limiter la description à 500 caractères
-document.getElementById('description').addEventListener('input', function(e) {
-  if (e.target.value.length > 500) {
-    e.target.value = e.target.value.substring(0, 500);
-  }
-});
-
-// Valider l'URL YouTube
-document.getElementById('lien_youtube').addEventListener('input', function(e) {
-  const url = e.target.value;
-  const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)/;
-  
-  if (url && !youtubeRegex.test(url)) {
-    e.target.setCustomValidity('Veuillez entrer une URL YouTube valide');
-  } else {
-    e.target.setCustomValidity('');
-  }
-});
-</script>
 {% endblock %}

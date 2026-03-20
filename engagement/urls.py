@@ -5,7 +5,9 @@ urlpatterns = [
     path('voter/<int:morceau_id>/',        views.voter,                  name='voter'),
     path('telecharger/<int:morceau_id>/',  views.valider_telechargement, name='telecharger'),
     path('vue-video/<int:video_id>/',      views.enregistrer_vue,        name='vue_video'),
+    path('ecouter/<int:morceau_id>/',      views.enregistrer_ecoute,     name='ecouter'),
     path('liker/<int:video_id>/',          views.liker_video,            name='liker_video'),
     path('commenter/<int:video_id>/',      views.commenter_video,        name='commenter_video'),
     path('get-pub-telechargement/',        views.get_pub_telechargement, name='get_pub_telechargement'),
+    path('abonner/<int:artiste_id>/',      views.abonner,                name='abonner'),
 ]

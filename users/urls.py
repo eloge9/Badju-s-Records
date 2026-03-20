@@ -8,4 +8,7 @@ urlpatterns = [
     path('mon-espace/',      views.mon_espace,       name='mon_espace'),
     path('devenir-artiste/', views.devenir_artiste,  name='devenir_artiste'),
     path('modifier-profil/', views.modifier_profil,  name='modifier_profil'),
+    path('profil/<str:username>/', views.profil_public, name='profil_public'),
+    path('notifications/',           views.notifications,               name='notifications'),
+    path('notifications/nb/',        views.nb_notifications_non_lues,   name='nb_notifications'),
 ]

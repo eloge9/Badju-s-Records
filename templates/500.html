@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Erreur serveur — Badju's Records{% endblock %}
+
+{% block content %}
+<div class="error-container">
+  <div class="error-content">
+    <div class="error-code" style="color: var(--accent-red);">500</div>
+    <h1 class="error-titre">Erreur serveur</h1>
+    <p class="error-message">
+      Une erreur inattendue s'est produite. Notre équipe a été notifiée.
+      Réessaie dans quelques instants.
+    </p>
+    <div class="error-actions">
+      <a href="{% url 'accueil' %}" class="btn btn-gold">🏠 Retour à l'accueil</a>
+    </div>
+    <div class="error-disc">🎵</div>
+  </div>
+</div>
+{% endblock %}

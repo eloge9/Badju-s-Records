@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from models_app.models import ProfilArtiste, Morceau, Video
+from models_app.models import ProfilArtiste, Morceau, Video, Abonnement
 
 
 def liste_artistes(request):
@@ -13,8 +13,18 @@ def detail_artiste(request, id):
     artiste  = get_object_or_404(ProfilArtiste, id=id)
     morceaux = artiste.morceaux.filter(statut='valide').order_by('-points')
     videos   = artiste.videos.filter(statut='valide').order_by('-created_at')
+
+    est_abonne = False
+    if request.user.is_authenticated:
+        est_abonne = Abonnement.objects.filter(
+            abonne  = request.user,
+            artiste = artiste
+        ).exists()
+
     return render(request, 'artistes/detail.html', {
-        'artiste':  artiste,
-        'morceaux': morceaux,
-        'videos':   videos,
+        'artiste':    artiste,
+        'morceaux':   morceaux,
+        'videos':     videos,
+        'est_abonne': est_abonne,
+        'nb_abonnes': artiste.abonnes.count(),
     })

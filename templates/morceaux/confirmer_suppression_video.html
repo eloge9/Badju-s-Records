@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer une vidéo — Badju's Records{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-danger text-white">
+          <h5 class="mb-0">🗑️ Confirmer la suppression</h5>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">
+            Êtes-vous sûr de vouloir supprimer la vidéo <strong>"{{ video.titre }}"</strong> ?
+          </p>
+          <p class="text-warning">
+            <small>⚠️ Cette action est irréversible.</small>
+          </p>
+          
+          <form method="POST">
+            {% csrf_token %}
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-danger">
+                🗑️ Supprimer définitivement
+              </button>
+              <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                ❌ Annuler
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  border-radius: 12px 12px 0 0 !important;
+  border: none;
+}
+
+.btn {
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 500;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+  border-color: #545b62;
+}
+</style>
+{% endblock %}

@@ -72,17 +72,47 @@ function voter(morceauId) {
 
 // ── Afficher un message temporaire ──
 function afficherMessage(texte, type) {
-  const container = document.getElementById("messages-container");
-  if (!container) return;
+  // Créer le conteneur de messages s'il n'existe pas
+  let container = document.querySelector('.messages-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'messages-container';
+    container.style.cssText = `
+      position: fixed;
+      top: calc(var(--navbar-height) + 1rem);
+      right: 1rem;
+      z-index: 3000;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-width: 380px;
+    `;
+    document.body.appendChild(container);
+  }
 
-  const msg = document.createElement("div");
-  msg.className = `message message-${type}`;
-  msg.innerHTML = `
+  const notification = document.createElement('div');
+  notification.className = `message message-${type}`;
+  notification.innerHTML = `
     ${texte}
     <button class="message-close" onclick="this.parentElement.remove()">✕</button>
   `;
-  container.appendChild(msg);
 
-  // Supprimer automatiquement après 4 secondes
-  setTimeout(() => msg.remove(), 4000);
+  // Ajouter au conteneur de messages
+  container.appendChild(notification);
+
+  // Auto-suppression après 5 secondes
+  setTimeout(() => {
+    if (notification.parentElement) {
+      notification.remove();
+    }
+  }, 5000);
+}
+
+// ── Fonction utilitaire pour obtenir le token CSRF ──
+function getCsrfToken() {
+  const csrf = document.cookie
+    .split(";")
+    .find((c) => c.trim().startsWith("csrftoken="))
+    ?.split("=")[1];
+  return csrf || '';
 }

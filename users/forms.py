@@ -126,6 +126,13 @@ class ModifierProfilForm(forms.ModelForm):
             }),
         }
 
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        # Permettre de garder son propre email
+        if User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
+            raise ValidationError("Cet email est déjà utilisé par un autre compte.")
+        return email
+
     def clean_avatar(self):
         avatar = self.cleaned_data.get('avatar')
         if avatar and hasattr(avatar, 'name'):
@@ -143,6 +150,71 @@ class ModifierProfilForm(forms.ModelForm):
 # ─────────────────────────────────────────────
 
 class CreerProfilArtisteForm(forms.ModelForm):
+    class Meta:
+        model  = ProfilArtiste
+        fields = [
+            'nom_artiste', 'bio', 'genre', 'ville',
+            'photo', 'photo_cover',
+            'facebook', 'instagram', 'twitter'
+        ]
+        widgets = {
+            'nom_artiste': forms.TextInput(attrs={
+                'placeholder': 'Votre nom de scène',
+                'class': 'form-input'
+            }),
+            'bio': forms.Textarea(attrs={
+                'placeholder': 'Parlez de vous...',
+                'class': 'form-input',
+                'rows': 4
+            }),
+            'genre': forms.Select(attrs={
+                'class': 'form-input'
+            }),
+            'ville': forms.TextInput(attrs={
+                'placeholder': 'Votre ville',
+                'class': 'form-input'
+            }),
+            'facebook': forms.URLInput(attrs={
+                'placeholder': 'https://facebook.com/...',
+                'class': 'form-input'
+            }),
+            'instagram': forms.URLInput(attrs={
+                'placeholder': 'https://instagram.com/...',
+                'class': 'form-input'
+            }),
+            'twitter': forms.URLInput(attrs={
+                'placeholder': 'https://twitter.com/...',
+                'class': 'form-input'
+            }),
+        }
+
+    def clean_photo(self):
+        photo = self.cleaned_data.get('photo')
+        if photo and hasattr(photo, 'name'):
+            ext = os.path.splitext(photo.name)[1].lower()
+            if ext not in ['.jpg', '.jpeg', '.png', '.webp']:
+                raise ValidationError("Format non autorisé. Utilisez jpg, png ou webp.")
+            if photo.size > 5 * 1024 * 1024:
+                raise ValidationError("La photo ne doit pas dépasser 5 MB.")
+        return photo
+
+    def clean_photo_cover(self):
+        cover = self.cleaned_data.get('photo_cover')
+        if cover and hasattr(cover, 'name'):
+            ext = os.path.splitext(cover.name)[1].lower()
+            if ext not in ['.jpg', '.jpeg', '.png', '.webp']:
+                raise ValidationError("Format non autorisé. Utilisez jpg, png ou webp.")
+            if cover.size > 5 * 1024 * 1024:
+                raise ValidationError("La cover ne doit pas dépasser 5 MB.")
+        return cover
+
+
+# ─────────────────────────────────────────────
+# MODIFIER PROFIL ARTISTE (ProfilArtiste)
+# Champs spécifiques à l'artiste
+# ─────────────────────────────────────────────
+
+class ModifierProfilArtisteForm(forms.ModelForm):
     class Meta:
         model  = ProfilArtiste
         fields = [

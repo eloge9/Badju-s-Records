@@ -13,7 +13,7 @@ class MorceauForm(forms.ModelForm):
                 'class': 'form-input'
             }),
             'genre': forms.Select(attrs={
-                'class': 'form-input'
+                'class': 'upload-input'
             }),
             'date_sortie': forms.DateInput(attrs={
                 'type': 'date',
@@ -46,17 +46,37 @@ class VideoForm(forms.ModelForm):
 
     def __init__(self, *args, artiste=None, **kwargs):
         super().__init__(*args, **kwargs)
-        # Filtrer les morceaux pour n'afficher que ceux de cet artiste
+
+        # ── Filtrer les morceaux par artiste ──
         if artiste:
-            self.fields['morceau'].queryset = Morceau.objects.filter(
+            morceaux_artiste = Morceau.objects.filter(
                 artiste=artiste,
                 statut='valide'
-            )
-        self.fields['morceau'].required = False
+            ).order_by('-created_at')
+
+            self.fields['morceau'].queryset = morceaux_artiste
+
+            # Message d'aide selon le nombre de morceaux disponibles
+            if morceaux_artiste.exists():
+                self.fields['morceau'].help_text = (
+                    f"{morceaux_artiste.count()} morceau(x) disponible(s). "
+                    "Lier la vidéo à un morceau permet d'augmenter ses points."
+                )
+            else:
+                self.fields['morceau'].help_text = (
+                    "Aucun morceau validé disponible. "
+                    "Ajoutez d'abord un morceau et attendez sa validation."
+                )
+        else:
+            self.fields['morceau'].queryset = Morceau.objects.none()
+
+        # Morceau optionnel
+        self.fields['morceau'].required  = False
+        self.fields['morceau'].empty_label = "-- Aucun morceau lié (optionnel) --"
 
     class Meta:
         model  = Video
-        fields = ['titre', 'morceau', 'fichier_video', 'youtube_url', 'thumbnail']
+        fields = ['titre', 'morceau', 'description', 'fichier_video', 'youtube_url', 'thumbnail']
         widgets = {
             'titre': forms.TextInput(attrs={
                 'placeholder': 'Titre de la vidéo',
@@ -65,18 +85,31 @@ class VideoForm(forms.ModelForm):
             'morceau': forms.Select(attrs={
                 'class': 'form-input'
             }),
+            'description': forms.Textarea(attrs={
+                'placeholder': 'Décris ta vidéo, les paroles, le contexte...',
+                'class': 'form-input',
+                'rows': 3
+            }),
             'youtube_url': forms.URLInput(attrs={
                 'placeholder': 'https://youtube.com/watch?v=...',
                 'class': 'form-input'
             }),
         }
+        labels = {
+            'morceau':      'Morceau lié (optionnel)',
+            'fichier_video': 'Fichier vidéo (MP4, WEBM, MOV)',
+            'youtube_url':   'Ou lien YouTube',
+            'thumbnail':     'Miniature (image de couverture)',
+        }
 
     def clean(self):
-        cleaned  = super().clean()
-        fichier  = cleaned.get('fichier_video')
-        youtube  = cleaned.get('youtube_url')
+        cleaned = super().clean()
+        fichier = cleaned.get('fichier_video')
+        youtube = cleaned.get('youtube_url')
         if not fichier and not youtube:
-            raise forms.ValidationError("Fournissez un fichier vidéo ou un lien YouTube.")
+            raise forms.ValidationError(
+                "Fournissez un fichier vidéo (MP4) ou un lien YouTube."
+            )
         return cleaned
 
     def clean_fichier_video(self):
@@ -88,3 +121,13 @@ class VideoForm(forms.ModelForm):
             if fichier.size > 500 * 1024 * 1024:
                 raise forms.ValidationError("La vidéo ne doit pas dépasser 500 MB.")
         return fichier
+
+    def clean_thumbnail(self):
+        thumbnail = self.cleaned_data.get('thumbnail')
+        if thumbnail and hasattr(thumbnail, 'name'):
+            ext = os.path.splitext(thumbnail.name)[1].lower()
+            if ext not in ['.jpg', '.jpeg', '.png', '.webp']:
+                raise forms.ValidationError("Seuls JPG, PNG et WEBP sont autorisés.")
+            if thumbnail.size > 5 * 1024 * 1024:
+                raise forms.ValidationError("La miniature ne doit pas dépasser 5 MB.")
+        return thumbnail

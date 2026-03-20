@@ -1,21 +1,17 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login, logout
 from django.contrib import messages
-from django.contrib.auth.models import User
-from models_app.models import ProfilArtiste, Morceau, Vote, Telechargement
 from .forms import (
     InscriptionForm,
     ConnexionForm,
     ModifierProfilForm,
-    CreerProfilArtisteForm
+    ModifierProfilArtisteForm,
+    CreerProfilArtisteForm,
 )
 from models_app.models import (
-    User,
-    ProfilUtilisateur,
-    ProfilArtiste,
-    Vote,
-    Telechargement
+    User, ProfilUtilisateur, ProfilArtiste,
+    Vote, Telechargement, Abonnement
 )
 
 
@@ -96,28 +92,22 @@ def deconnexion(request):
 
 @login_required
 def mon_espace(request):
-    user = request.user
+    user   = request.user
+    profil, created = ProfilUtilisateur.objects.get_or_create(utilisateur=user)
 
-    # Récupérer ou créer le profil utilisateur si inexistant
-    profil, created = ProfilUtilisateur.objects.get_or_create(
-        utilisateur=user
-    )
-
-    # Statistiques de l'utilisateur
-    votes          = Vote.objects.filter(user=user).select_related('morceau').order_by('-created_at')
-    telechargements = Telechargement.objects.filter(
-        user=user,
-        pub_vue=True
-    ).select_related('morceau').order_by('-created_at')
+    votes           = Vote.objects.filter(user=user).select_related('morceau').order_by('-created_at')
+    telechargements = Telechargement.objects.filter(user=user).select_related('morceau').order_by('-created_at')
+    abonnements     = Abonnement.objects.filter(abonne=user).select_related('artiste').order_by('-created_at')
 
     context = {
-        'user':             user,
-        'profil':           profil,
-        'votes':            votes,
-        'telechargements':  telechargements,
-        'nb_votes':         votes.count(),
+        'user':               user,
+        'profil':             profil,
+        'votes':              votes,
+        'telechargements':    telechargements,
+        'abonnements':        abonnements,
+        'nb_votes':           votes.count(),
         'nb_telechargements': telechargements.count(),
-        # Afficher le bouton "Devenir Artiste" seulement si utilisateur standard
+        'nb_abonnements':     abonnements.count(),
         'peut_devenir_artiste': user.role == 'utilisateur',
     }
     return render(request, 'users/mon_espace.html', context)
@@ -177,22 +167,101 @@ def devenir_artiste(request):
 def modifier_profil(request):
     user = request.user
 
-    if request.method == 'POST':
-        form = ModifierProfilForm(request.POST, request.FILES, instance=user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Votre profil a été mis à jour avec succès.")
+    # Préparer le formulaire artiste si besoin
+    form_artiste = None
+    profil_artiste = None
+    if user.role == 'artiste':
+        try:
+            profil_artiste = user.profil_artiste
+        except ProfilArtiste.DoesNotExist:
+            profil_artiste = None
 
-            # Rediriger selon le rôle
+    if request.method == 'POST':
+        # Formulaire compte principal
+        form = ModifierProfilForm(
+            request.POST,
+            request.FILES,
+            instance=user
+        )
+
+        # Formulaire profil artiste si artiste
+        if profil_artiste:
+            form_artiste = ModifierProfilArtisteForm(
+                request.POST,
+                request.FILES,
+                instance=profil_artiste,
+                prefix='artiste'
+            )
+
+        # Valider les deux formulaires
+        form_valide         = form.is_valid()
+        form_artiste_valide = (form_artiste.is_valid() if form_artiste else True)
+
+        if form_valide and form_artiste_valide:
+            form.save()
+            if form_artiste:
+                form_artiste.save()
+            messages.success(request, "Profil mis à jour avec succès !")
             if user.role == 'artiste':
                 return redirect('dashboard')
             return redirect('mon_espace')
         else:
-            messages.error(request, "Veuillez corriger les erreurs ci-dessous.")
+            messages.error(request, "Veuillez corriger les erreurs.")
     else:
         form = ModifierProfilForm(instance=user)
+        if profil_artiste:
+            form_artiste = ModifierProfilArtisteForm(
+                instance=profil_artiste,
+                prefix='artiste'
+            )
 
     return render(request, 'users/modifier_profil.html', {
-        'form': form,
-        'user': user,
+        'form':         form,
+        'form_artiste': form_artiste,
+        'user':         user,
     })
+
+
+# ─────────────────────────────────────────────
+# PROFIL PUBLIC UTILISATEUR
+# ─────────────────────────────────────────────
+
+def profil_public(request, username):
+    profil_user = get_object_or_404(User, username=username, is_active=True)
+
+    # Si c'est un artiste, rediriger vers son profil artiste
+    if profil_user.role == 'artiste':
+        try:
+            return redirect('detail_artiste', id=profil_user.profil_artiste.id)
+        except:
+            pass
+
+    votes          = Vote.objects.filter(user=profil_user).select_related('morceau').order_by('-created_at')[:10]
+    telechargements = Telechargement.objects.filter(
+        user=profil_user, pub_vue=True
+    ).select_related('morceau').order_by('-created_at')[:10]
+
+    return render(request, 'users/profil_public.html', {
+        'profil_user':    profil_user,
+        'votes':          votes,
+        'telechargements': telechargements,
+        'nb_votes':       Vote.objects.filter(user=profil_user).count(),
+        'nb_dl':          Telechargement.objects.filter(user=profil_user, pub_vue=True).count(),
+    })
+
+
+# ─────────────────────────────────────────────
+# NOTIFICATIONS
+# ─────────────────────────────────────────────
+
+@login_required
+def notifications(request):
+    notifs = request.user.notifications.all()[:30]
+    # Marquer toutes comme lues
+    request.user.notifications.filter(lu=False).update(lu=True)
+    return render(request, 'users/notifications.html', {'notifs': notifs})
+
+@login_required
+def nb_notifications_non_lues(request):
+    nb = request.user.notifications.filter(lu=False).count()
+    return JsonResponse({'nb': nb})

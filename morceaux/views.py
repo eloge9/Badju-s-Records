@@ -1,11 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
 from django.db.models import Q
-from models_app.models import (
-    Morceau, Video, Publicite,
-    ProfilArtiste, Vote, Telechargement, VueVideo, LikeVideo, CommentaireVideo
-)
+from django.contrib import messages
+from models_app.models import Morceau, Video, ProfilArtiste, VueVideo, LikeVideo, CommentaireVideo, Publicite, Vote, Abonnement
 from .forms import MorceauForm, VideoForm
 
 
@@ -136,26 +133,14 @@ def ajouter_morceau(request):
     if request.method == 'POST':
         form = MorceauForm(request.POST, request.FILES)
         if form.is_valid():
-            try:
-                morceau = form.save(commit=False)
-                morceau.artiste = artiste
-                morceau.statut = 'valide'  # Validé automatiquement
-                morceau.save()
-                
-                messages.success(
-                    request, 
-                    f"🎵 '{morceau.titre}' publié avec succès ! "
-                    "Votre morceau est maintenant disponible sur Badju's Records."
-                )
-                return redirect('dashboard')
-            except Exception as e:
-                messages.error(request, f"Une erreur est survenue: {str(e)}")
-                print(f"Erreur lors de la sauvegarde du morceau: {e}")
+            morceau         = form.save(commit=False)
+            morceau.artiste = artiste
+            morceau.statut  = 'valide'  # ← validé automatiquement
+            morceau.save()
+            messages.success(request, f"'{morceau.titre}' publié avec succès !")
+            return redirect('dashboard')
         else:
-            messages.error(request, "❌ Veuillez corriger les erreurs ci-dessous:")
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"• {field}: {error}")
+            messages.error(request, "Veuillez corriger les erreurs.")
     else:
         form = MorceauForm()
 
@@ -214,7 +199,7 @@ def supprimer_morceau(request, id):
         messages.success(request, f"'{titre}' supprimé avec succès.")
         return redirect('dashboard')
 
-    return render(request, 'morceaux/confirmer_suppression.html', {'morceau': morceau})
+    return redirect('dashboard')
 
 
 # ─────────────────────────────────────────────
@@ -237,19 +222,18 @@ def ajouter_video(request):
         if form.is_valid():
             video         = form.save(commit=False)
             video.artiste = artiste
-            video.statut  = 'valide'  # Validé automatiquement
+            video.statut  = 'valide'  # ← validé automatiquement
             video.save()
-            messages.success(
-                request, 
-                f"🎬 '{video.titre}' publiée avec succès ! "
-                "Votre vidéo est maintenant disponible sur Badju's Records."
-            )
+            if video.morceau:
+                messages.success(
+                    request,
+                    f"'{video.titre}' publiée et liée à '{video.morceau.titre}' !"
+                )
+            else:
+                messages.success(request, f"'{video.titre}' publiée avec succès !")
             return redirect('dashboard')
         else:
-            messages.error(request, "❌ Veuillez corriger les erreurs ci-dessous:")
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"• {field}: {error}")
+            messages.error(request, "Veuillez corriger les erreurs.")
     else:
         form = VideoForm(artiste=artiste)
 
@@ -290,11 +274,129 @@ def detail_video(request, id):
     if request.user.is_authenticated:
         deja_like = LikeVideo.objects.filter(video=video, user=request.user).exists()
 
+    # Vérifier l'abonnement à l'artiste
+    est_abonne = False
+    if request.user.is_authenticated:
+        est_abonne = Abonnement.objects.filter(
+            abonne  = request.user,
+            artiste = video.artiste
+        ).exists()
+
     commentaires = video.commentaires.filter(parent=None).order_by('-created_at')
 
     return render(request, 'morceaux/detail_video.html', {
         'video':            video,
         'videos_similaires': videos_similaires,
         'deja_like':        deja_like,
+        'est_abonne':       est_abonne,
         'commentaires':     commentaires,
+        'nb_abonnes':       video.artiste.abonnes.count(),
     })
+
+
+# ─────────────────────────────────────────────
+# MODIFIER VIDÉO
+# ─────────────────────────────────────────────
+
+@login_required
+def modifier_video(request, id):
+    if request.user.role != 'artiste':
+        return redirect('accueil')
+
+    try:
+        artiste = request.user.profil_artiste
+    except ProfilArtiste.DoesNotExist:
+        return redirect('accueil')
+
+    video = get_object_or_404(Video, id=id, artiste=artiste)
+
+    if request.method == 'POST':
+        form = VideoForm(request.POST, request.FILES, instance=video, artiste=artiste)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"'{video.titre}' modifiée avec succès.")
+            return redirect('dashboard')
+        else:
+            messages.error(request, "Veuillez corriger les erreurs.")
+    else:
+        form = VideoForm(instance=video, artiste=artiste)
+
+    return render(request, 'morceaux/form_video.html', {'form': form})
+
+
+# ─────────────────────────────────────────────
+# SUPPRIMER VIDÉO
+# ─────────────────────────────────────────────
+
+@login_required
+def supprimer_video(request, id):
+    if request.user.role != 'artiste':
+        return redirect('accueil')
+
+    try:
+        artiste = request.user.profil_artiste
+    except ProfilArtiste.DoesNotExist:
+        return redirect('accueil')
+
+    video = get_object_or_404(Video, id=id, artiste=artiste)
+
+    if request.method == 'POST':
+        titre = video.titre
+        video.delete()
+        messages.success(request, f"'{titre}' supprimée avec succès.")
+        return redirect('dashboard')
+
+    # GET → rediriger vers dashboard
+    # La confirmation se fait via modal JS
+    return redirect('dashboard')
+
+
+# ─────────────────────────────────────────────
+# RECHERCHE GLOBALE
+# ─────────────────────────────────────────────
+
+def recherche_globale(request):
+    query    = request.GET.get('q', '').strip()
+    morceaux = []
+    artistes = []
+    videos   = []
+
+    if query:
+        morceaux = Morceau.objects.filter(
+            Q(titre__icontains=query) |
+            Q(artiste__nom_artiste__icontains=query) |
+            Q(genre__icontains=query),
+            statut='valide'
+        ).order_by('-points')[:10]
+
+        artistes = ProfilArtiste.objects.filter(
+            Q(nom_artiste__icontains=query) |
+            Q(genre__icontains=query) |
+            Q(ville__icontains=query),
+            utilisateur__is_active=True
+        )[:6]
+
+        videos = Video.objects.filter(
+            Q(titre__icontains=query) |
+            Q(artiste__nom_artiste__icontains=query),
+            statut='valide'
+        ).order_by('-nb_vues')[:6]
+
+    return render(request, 'morceaux/recherche.html', {
+        'query':    query,
+        'morceaux': morceaux,
+        'artistes': artistes,
+        'videos':   videos,
+        'nb_total': len(morceaux) + len(artistes) + len(videos),
+    })
+
+
+# ─────────────────────────────────────────────
+# PAGES D'ERREUR CUSTOM
+# ─────────────────────────────────────────────
+
+def page_404(request, exception):
+    return render(request, '404.html', status=404)
+
+def page_500(request):
+    return render(request, '500.html', status=500)

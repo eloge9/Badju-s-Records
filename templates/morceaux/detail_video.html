@@ -15,13 +15,16 @@
       {% if video.fichier_video %}
       <video id="lecteur-video" controls autoplay class="yt-video">
         <source src="{{ video.fichier_video.url }}" type="video/mp4">
-        Votre navigateur ne supporte pas les vidéos.
+        Votre navigateur ne supporte pas la lecture vidéo.
       </video>
       {% elif video.youtube_url %}
-      <iframe class="yt-video" src="{{ video.youtube_embed_url }}" frameborder="0" allowfullscreen
-        allow="autoplay; encrypted-media">
+      <iframe class="yt-video" src="{{ video.youtube_embed_url }}?rel=0&modestbranding=1&autoplay=1" frameborder="0"
+        allowfullscreen
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin">
       </iframe>
       {% endif %}
+
     </div>
 
     <!-- Titre -->
@@ -49,6 +52,12 @@
         </button>
 
         <!-- Télécharger le morceau -->
+        {% if video.morceau %}
+        <button class="yt-action-btn yt-action-gold" onclick="jouerMorceauAssocie()">
+          🎵 Écouter le son
+        </button>
+        {% endif %}
+
         <button class="yt-action-btn yt-action-gold"
           onclick="ouvrirModalTelechargement({{ video.morceau.id|default:0 }})">
           ⬇ Télécharger le son
@@ -81,8 +90,9 @@
       </a>
 
       {% if user.is_authenticated %}
-      <button id="btn-abonner" class="btn btn-gold" onclick="abonner({{ video.artiste.id }})">
-        🔔 S'abonner
+      <button id="btn-abonner" class="btn {% if est_abonne %}btn-outline btn-abonne-actif{% else %}btn-gold{% endif %}"
+        onclick="toggleAbonnement({{ video.artiste.id }})">
+        {% if est_abonne %}✓ Abonné{% else %}🔔 S'abonner{% endif %}
       </button>
       {% else %}
       <a href="{% url 'connexion' %}" class="btn btn-gold">🔔 S'abonner</a>
@@ -90,11 +100,16 @@
     </div>
 
     <!-- Description -->
-    {% if video.morceau %}
+    {% if video.description or video.morceau %}
     <div class="yt-description">
+      {% if video.description %}
+      <p>{{ video.description|linebreaksbr }}</p>
+      {% endif %}
+      {% if video.morceau %}
       <p><strong>Morceau :</strong> {{ video.morceau.titre }}</p>
       <p><strong>Genre :</strong> {{ video.morceau.get_genre_display }}</p>
       <p><strong>Date de sortie :</strong> {{ video.morceau.date_sortie|date:"d M Y" }}</p>
+      {% endif %}
     </div>
     {% endif %}
 
@@ -423,6 +438,83 @@
     return document.cookie.split(';')
       .find(c => c.trim().startsWith('csrftoken='))
       ?.split('=')[1] || '';
+  }
+
+  // ── Abonnement ──
+  function toggleAbonnement(artisteId) {
+    const csrf = getCsrfToken();
+    const btn = document.getElementById('btn-abonner');
+    if (!btn) return;
+
+    btn.disabled = true;
+
+    fetch(`/engagement/abonner/${artisteId}/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrf },
+    })
+      .then(r => r.json())
+      .then(data => {
+        btn.disabled = false;
+        if (data.succes) {
+          if (data.est_abonne) {
+            btn.textContent = '✓ Abonné';
+            btn.classList.remove('btn-gold');
+            btn.classList.add('btn-outline', 'btn-abonne-actif');
+          } else {
+            btn.textContent = '🔔 S\'abonner';
+            btn.classList.remove('btn-outline', 'btn-abonne-actif');
+            btn.classList.add('btn-gold');
+          }
+          showToast(data.message, 'success');
+        } else {
+          showToast(data.message, 'error');
+        }
+      })
+      .catch(() => {
+        btn.disabled = false;
+        showToast('Erreur, réessaie.', 'error');
+      });
+  }
+
+  // ── Écoute du morceau associé ──
+  function jouerMorceauAssocie() {
+    {% if video.morceau %}
+    const morceauData = {
+      id: {{ video.morceau.id }
+  },
+  titre: '{{ video.morceau.titre|escapejs }}',
+    artiste: '{{ video.artiste.nom_artiste|escapejs }}',
+      pochette: '{% if video.morceau.pochette %}{{ video.morceau.pochette.url }}{% endif %}',
+        fichier: '{{ video.morceau.fichier_mp3.url }}'
+    };
+
+  // Enregistrer l'écoute
+  enregistrerEcoute(morceauData.id);
+
+  // Jouer avec le player global
+  if (window.miniPlayer) {
+    window.miniPlayer.loadMorceau(morceauData);
+    window.miniPlayer.play();
+    showToast('🎵 Lecture du morceau...', 'success');
+  }
+  {% else %}
+  showToast('❌ Ce clip n\'a pas de morceau associé', 'error');
+  {% endif %}
+  }
+
+  function enregistrerEcoute(morceauId) {
+    const csrf = getCsrfToken();
+    fetch(`/engagement/ecouter/${morceauId}/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrf },
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.succes) {
+          console.log(`+${data.points} points pour l'artiste !`);
+        }
+      })
+      .catch(() => { }); // Silencieux
   }
 
   // ── Téléchargement ──

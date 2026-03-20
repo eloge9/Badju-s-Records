@@ -1,609 +1,961 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ artiste.nom_artiste }} - Badju's Records{% endblock %}
+{% block title %}{{ artiste.nom_artiste }} — Badju's Records{% endblock %}
+
+{% block content %}
+<div class="artiste-container">
+
+  <!-- ── COVER + HEADER style YouTube ── -->
+  <div class="artiste-cover-section">
+    {% if artiste.photo_cover %}
+    <img src="{{ artiste.photo_cover.url }}" alt="cover" class="artiste-cover-img">
+    {% else %}
+    <div class="artiste-cover-placeholder"></div>
+    {% endif %}
+  </div>
+
+  <div class="artiste-profil-bar">
+    <div class="artiste-profil-left">
+      {% if artiste.photo %}
+      <img src="{{ artiste.photo.url }}" alt="{{ artiste.nom_artiste }}" class="artiste-avatar">
+      {% else %}
+      <div class="artiste-avatar artiste-avatar-placeholder">
+        {{ artiste.nom_artiste|first|upper }}
+      </div>
+      {% endif %}
+      <div class="artiste-profil-info">
+        <h1 class="artiste-nom">
+          {{ artiste.nom_artiste }}
+          {% if artiste.verified %}
+          <span class="badge-verified" title="Artiste vérifié">✓</span>
+          {% endif %}
+        </h1>
+        <div class="artiste-meta">
+          {% if artiste.genre %}<span>{{ artiste.get_genre_display }}</span>{% endif %}
+          {% if artiste.ville %}<span>📍 {{ artiste.ville }}</span>{% endif %}
+          <span id="nb-abonnes-{{ artiste.id }}">{{ nb_abonnes }}</span> abonné{{ nb_abonnes|pluralize }}
+        </div>
+        {% if artiste.bio %}
+        <p class="artiste-bio">{{ artiste.bio|truncatechars:150 }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="artiste-profil-actions">
+      {% if user.is_authenticated %}
+      {% if user.role != 'artiste' or user.profil_artiste.id != artiste.id %}
+      <button id="btn-abonner-{{ artiste.id }}"
+        class="btn {% if est_abonne %}btn-outline btn-abonne-actif{% else %}btn-gold{% endif %}"
+        onclick="toggleAbonnement({{ artiste.id }})">
+        {% if est_abonne %}✓ Abonné{% else %}🔔 S'abonner{% endif %}
+      </button>
+      {% endif %}
+      {% else %}
+      <a href="{% url 'connexion' %}" class="btn btn-gold">🔔 S'abonner</a>
+      {% endif %}
+
+      <button class="btn btn-ghost" onclick="partagerArtiste()">🔗 Partager</button>
+    </div>
+  </div>
+
+  <!-- ── STATS ── -->
+  <div class="artiste-stats-bar">
+    <div class="artiste-stat">
+      <span class="artiste-stat-nb">{{ artiste.morceaux.count }}</span>
+      <span class="artiste-stat-label">Morceaux</span>
+    </div>
+    <div class="artiste-stat">
+      <span class="artiste-stat-nb">{{ artiste.videos.count }}</span>
+      <span class="artiste-stat-label">Vidéos</span>
+    </div>
+    <div class="artiste-stat">
+      <span class="artiste-stat-nb">{{ artiste.total_votes }}</span>
+      <span class="artiste-stat-label">Votes</span>
+    </div>
+    <div class="artiste-stat">
+      <span class="artiste-stat-nb">{{ artiste.total_telechargements }}</span>
+      <span class="artiste-stat-label">Téléchargements</span>
+    </div>
+    {% if artiste.meilleur_rang %}
+    <div class="artiste-stat">
+      <span class="artiste-stat-nb">#{{ artiste.meilleur_rang }}</span>
+      <span class="artiste-stat-label">Meilleur rang</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── TABS style YouTube ── -->
+  <div class="artiste-tabs">
+    <button class="artiste-tab active" onclick="switchTab('morceaux', this)">
+      🎵 Morceaux
+    </button>
+    <button class="artiste-tab" onclick="switchTab('videos', this)">
+      📺 Vidéos
+    </button>
+    <button class="artiste-tab" onclick="switchTab('apropos', this)">
+      ℹ À propos
+    </button>
+  </div>
+
+  <!-- ── TAB MORCEAUX ── -->
+  <div id="tab-morceaux" class="artiste-tab-content active">
+    {% if morceaux %}
+    <div class="yt-grid">
+      {% for morceau in morceaux %}
+      <div class="yt-content-card">
+        <div class="yt-content-thumbnail" onclick="jouerMorceau({
+              id: {{ morceau.id }},
+              titre: '{{ morceau.titre|escapejs }}',
+              artiste: '{{ artiste.nom_artiste|escapejs }}',
+              pochette: '{% if morceau.pochette %}{{ morceau.pochette.url }}{% endif %}',
+              fichier: '{{ morceau.fichier_mp3.url }}'
+            })">
+          {% if morceau.pochette %}
+          <img src="{{ morceau.pochette.url }}" alt="{{ morceau.titre }}">
+          {% else %}
+          <div class="yt-thumb-placeholder">🎵</div>
+          {% endif %}
+          <div class="yt-thumb-overlay">▶</div>
+          <div class="yt-thumb-type audio-badge">🎵 Audio</div>
+        </div>
+        <div class="yt-content-info">
+          <div class="yt-content-artiste-mini">
+            {% if artiste.photo %}
+            <img src="{{ artiste.photo.url }}" alt="{{ artiste.nom_artiste }}" class="yt-mini-avatar">
+            {% else %}
+            <div class="yt-mini-avatar yt-mini-placeholder">{{ artiste.nom_artiste|first|upper }}</div>
+            {% endif %}
+            <div class="yt-content-text">
+              <a href="{% url 'detail_morceau' morceau.id %}" class="yt-content-titre">
+                {{ morceau.titre }}
+              </a>
+              <p class="yt-content-meta">{{ artiste.nom_artiste }}</p>
+              <p class="yt-content-meta">
+                {{ morceau.nb_votes }} votes · {{ morceau.points }} pts
+                {% if morceau.rang %} · #{{ morceau.rang }}{% endif %}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="yt-content-actions">
+          <button class="yt-action-mini" onclick="jouerMorceau({
+                  id: {{ morceau.id }},
+                  titre: '{{ morceau.titre|escapejs }}',
+                  artiste: '{{ artiste.nom_artiste|escapejs }}',
+                  pochette: '{% if morceau.pochette %}{{ morceau.pochette.url }}{% endif %}',
+                  fichier: '{{ morceau.fichier_mp3.url }}'
+                })" title="Écouter">▶</button>
+          <a href="{% url 'detail_morceau' morceau.id %}" class="yt-action-mini" title="Voir détail">👁</a>
+          {% if user.is_authenticated %}
+          <button class="yt-action-mini" onclick="ouvrirModalTelechargement({{ morceau.id }})"
+            title="Télécharger">⬇</button>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-block">
+      <p>Aucun morceau publié pour le moment.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── TAB VIDÉOS ── -->
+  <div id="tab-videos" class="artiste-tab-content">
+    {% if videos %}
+    <div class="yt-grid">
+      {% for video in videos %}
+      <a href="{% url 'detail_video' video.id %}" class="yt-content-card yt-content-card-link">
+        <div class="yt-content-thumbnail">
+          {% if video.thumbnail %}
+          <img src="{{ video.thumbnail.url }}" alt="{{ video.titre }}">
+          {% else %}
+          <div class="yt-thumb-placeholder">🎬</div>
+          {% endif %}
+          <div class="yt-thumb-overlay">▶</div>
+          <div class="yt-thumb-type video-badge">🎬 Vidéo</div>
+          <span class="yt-thumb-vues">👁 {{ video.nb_vues }}</span>
+        </div>
+        <div class="yt-content-info">
+          <div class="yt-content-artiste-mini">
+            {% if artiste.photo %}
+            <img src="{{ artiste.photo.url }}" alt="{{ artiste.nom_artiste }}" class="yt-mini-avatar">
+            {% else %}
+            <div class="yt-mini-avatar yt-mini-placeholder">{{ artiste.nom_artiste|first|upper }}</div>
+            {% endif %}
+            <div class="yt-content-text">
+              <p class="yt-content-titre">{{ video.titre }}</p>
+              <p class="yt-content-meta">{{ artiste.nom_artiste }}</p>
+              <p class="yt-content-meta">
+                {{ video.nb_vues }} vues · {{ video.created_at|date:"d M Y" }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-block">
+      <p>Aucune vidéo publiée pour le moment.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── TAB À PROPOS ── -->
+  <div id="tab-apropos" class="artiste-tab-content">
+    <div class="apropos-container">
+
+      <div class="apropos-section">
+        <h3 class="apropos-titre">Biographie</h3>
+        {% if artiste.bio %}
+        <p class="apropos-texte">{{ artiste.bio }}</p>
+        {% else %}
+        <p class="apropos-vide">Aucune biographie disponible.</p>
+        {% endif %}
+      </div>
+
+      <div class="apropos-section">
+        <h3 class="apropos-titre">Informations</h3>
+        <div class="apropos-infos">
+          {% if artiste.genre %}
+          <div class="apropos-info-item">
+            <span class="apropos-info-label">Genre</span>
+            <span class="apropos-info-val">{{ artiste.get_genre_display }}</span>
+          </div>
+          {% endif %}
+          {% if artiste.ville %}
+          <div class="apropos-info-item">
+            <span class="apropos-info-label">Ville</span>
+            <span class="apropos-info-val">{{ artiste.ville }}</span>
+          </div>
+          {% endif %}
+          <div class="apropos-info-item">
+            <span class="apropos-info-label">Membre depuis</span>
+            <span class="apropos-info-val">{{ artiste.created_at|date:"M Y" }}</span>
+          </div>
+          <div class="apropos-info-item">
+            <span class="apropos-info-label">Abonnés</span>
+            <span class="apropos-info-val">{{ nb_abonnes }}</span>
+          </div>
+        </div>
+      </div>
+
+      {% if artiste.facebook or artiste.instagram or artiste.twitter %}
+      <div class="apropos-section">
+        <h3 class="apropos-titre">Réseaux sociaux</h3>
+        <div class="apropos-reseaux">
+          {% if artiste.facebook %}
+          <a href="{{ artiste.facebook }}" target="_blank" class="reseau-btn reseau-fb">
+            Facebook
+          </a>
+          {% endif %}
+          {% if artiste.instagram %}
+          <a href="{{ artiste.instagram }}" target="_blank" class="reseau-btn reseau-ig">
+            Instagram
+          </a>
+          {% endif %}
+          {% if artiste.twitter %}
+          <a href="{{ artiste.twitter }}" target="_blank" class="reseau-btn reseau-tw">
+            Twitter / X
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div id="toast-artiste" class="toast hidden"></div>
+
+{% if user.is_authenticated %}
+<span id="user-connecte" style="display:none;"></span>
+{% endif %}
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+
+  // ── Switch tabs ──
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.artiste-tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.artiste-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ── Abonnement toggle ──
+  function toggleAbonnement(artisteId) {
+    const csrf = getCsrfToken();
+    const btn = document.getElementById(`btn-abonner-${artisteId}`);
+    const nb = document.getElementById(`nb-abonnes-${artisteId}`);
+    if (!btn) return;
+
+    btn.disabled = true;
+
+    fetch(`/engagement/abonner/${artisteId}/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrf },
+    })
+      .then(r => r.json())
+      .then(data => {
+        btn.disabled = false;
+        if (data.succes) {
+          if (data.est_abonne) {
+            btn.textContent = '✓ Abonné';
+            btn.classList.remove('btn-gold');
+            btn.classList.add('btn-outline', 'btn-abonne-actif');
+          } else {
+            btn.textContent = '🔔 S\'abonner';
+            btn.classList.remove('btn-outline', 'btn-abonne-actif');
+            btn.classList.add('btn-gold');
+          }
+          if (nb) nb.textContent = data.nb_abonnes;
+          afficherToast(data.message, 'success');
+        } else {
+          afficherToast(data.message, 'error');
+        }
+      })
+      .catch(() => {
+        btn.disabled = false;
+        afficherToast('Erreur, réessaie.', 'error');
+      });
+  }
+
+  // ── Écoute ──
+  function jouerMorceau(data) {
+    // Enregistrer l'écoute pour les points
+    enregistrerEcoute(data.id);
+
+    // Jouer le morceau (si le player global existe)
+    if (window.miniPlayer) {
+      window.miniPlayer.loadMorceau(data);
+      window.miniPlayer.play();
+    }
+  }
+
+  function enregistrerEcoute(morceauId) {
+    const csrf = getCsrfToken();
+    fetch(`/engagement/ecouter/${morceauId}/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrf },
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.succes) {
+          console.log(`+${data.points} points pour l'artiste !`);
+        }
+      })
+      .catch(() => { }); // Silencieux en cas d'erreur
+  }
+
+  // ── Téléchargement ──
+  function ouvrirModalTelechargement(morceauId) {
+    lancerTelechargement(morceauId, false);
+  }
+
+  function lancerTelechargement(morceauId, pubVue) {
+    const csrf = getCsrfToken();
+    const formData = new FormData();
+    formData.append('pub_vue', pubVue ? 'true' : 'false');
+
+    afficherToast('⏳ Préparation...', 'info');
+
+    fetch(`/engagement/telecharger/${morceauId}/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrf },
+      body: formData,
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.succes && data.url) {
+          const a = document.createElement('a');
+          a.href = data.url;
+          a.download = '';
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => document.body.removeChild(a), 1000);
+          afficherToast('⬇ Téléchargement démarré !', 'success');
+        }
+      })
+      .catch(() => afficherToast('Erreur téléchargement.', 'error'));
+  }
+
+  // ── Partager ──
+  function partagerArtiste() {
+    if (navigator.share) {
+      navigator.share({ title: document.title, url: window.location.href });
+    } else {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        afficherToast('🔗 Lien copié !', 'success');
+      });
+    }
+  }
+
+  // ── Toast ──
+  function afficherToast(message, type) {
+    document.querySelectorAll('.toast-dynamic').forEach(t => t.remove());
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type} toast-dynamic`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.3s';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  // ── CSRF ──
+  function getCsrfToken() {
+    return document.cookie.split(';')
+      .find(c => c.trim().startsWith('csrftoken='))
+      ?.split('=')[1] || '';
+  }
+</script>
+{% endblock %}
+
 
 {% block extra_css %}
 <style>
-.artiste-header {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 3rem;
-  margin-bottom: 3rem;
-  align-items: start;
-}
-
-.artiste-photo-container {
-  position: sticky;
-  top: 100px;
-  height: fit-content;
-}
-
-.artiste-photo {
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid var(--accent-gold);
-  box-shadow: var(--shadow-lg);
-}
-
-.artiste-photo-placeholder {
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-gold), var(--bg-secondary));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 4rem;
-  color: white;
-  border: 4px solid var(--accent-gold);
-  box-shadow: var(--shadow-lg);
-}
-
-.artiste-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.artiste-nom {
-  font-size: 3rem;
-  color: var(--text-primary);
-  font-family: var(--font-title);
-  margin-bottom: 0.5rem;
-}
-
-.artiste-bio {
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  line-height: 1.6;
-  max-width: 600px;
-}
-
-.artiste-stats {
-  display: flex;
-  gap: 2rem;
-  flex-wrap: wrap;
-}
-
-.stat-item {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 1.5rem;
-  text-align: center;
-  min-width: 120px;
-}
-
-.stat-number {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--accent-gold);
-  font-family: var(--font-title);
-}
-
-.stat-label {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
-}
-
-.artiste-actions {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.btn-suivre {
-  background: var(--accent-gold);
-  color: var(--bg-primary);
-  border: none;
-  padding: 0.75rem 2rem;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.btn-suivre:hover {
-  background: var(--accent-gold-hover);
-  transform: translateY(-2px);
-}
-
-.content-sections {
-  display: flex;
-  flex-direction: column;
-  gap: 3rem;
-}
-
-.section {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 2rem;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.section-title {
-  font-size: 1.8rem;
-  color: var(--text-primary);
-  font-family: var(--font-title);
-}
-
-.section-count {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-.morceaux-grid,
-.videos-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.5rem;
-}
-
-.morceau-card,
-.video-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 1rem;
-  transition: var(--transition);
-  cursor: pointer;
-}
-
-.morceau-card:hover,
-.video-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
-  border-color: var(--accent-gold);
-}
-
-.card-cover {
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: var(--radius-sm);
-  object-fit: cover;
-  margin-bottom: 1rem;
-}
-
-.card-cover-placeholder {
-  width: 100%;
-  aspect-ratio: 1;
-  background: linear-gradient(135deg, var(--accent-gold), var(--bg-secondary));
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-  color: white;
-  margin-bottom: 1rem;
-}
-
-.card-titre {
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.card-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.card-points {
-  color: var(--accent-gold);
-  font-weight: 600;
-}
-
-.card-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.btn-small {
-  flex: 1;
-  padding: 0.5rem;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  border-radius: var(--radius-sm);
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: var(--transition);
-  text-align: center;
-}
-
-.btn-small:hover {
-  background: var(--accent-gold);
-  color: var(--bg-primary);
-  border-color: var(--accent-gold);
-}
-
-.empty-section {
-  text-align: center;
-  padding: 3rem;
-  color: var(--text-muted);
-}
-
-.empty-section i {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
-@media (max-width: 768px) {
-  .artiste-header {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    text-align: center;
-  }
-  
-  .artiste-photo-container {
-    position: static;
+  .artiste-container {
+    max-width: 1280px;
     margin: 0 auto;
   }
-  
-  .artiste-nom {
+
+  /* ── Cover ── */
+  .artiste-cover-section {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+  }
+
+  .artiste-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .artiste-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1A1A25, #0A0A0F);
+  }
+
+  /* ── Profil bar ── */
+  .artiste-profil-bar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 0 2rem 1.5rem;
+    flex-wrap: wrap;
+    margin-top: -40px;
+  }
+
+  .artiste-profil-left {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.2rem;
+  }
+
+  .artiste-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--bg-primary);
+    flex-shrink: 0;
+  }
+
+  .artiste-avatar-placeholder {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 2rem;
+    font-weight: 700;
   }
-  
-  .artiste-stats {
+
+  .artiste-profil-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding-bottom: 0.2rem;
+  }
+
+  .artiste-nom {
+    font-family: var(--font-title);
+    font-size: 1.8rem;
+    letter-spacing: 1px;
+  }
+
+  .artiste-meta {
+    display: flex;
+    gap: 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    flex-wrap: wrap;
+  }
+
+  .artiste-bio {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    max-width: 500px;
+    line-height: 1.5;
+  }
+
+  .artiste-profil-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    padding-bottom: 0.4rem;
+  }
+
+  /* ── Stats bar ── */
+  .artiste-stats-bar {
+    display: flex;
+    gap: 2rem;
+    padding: 1rem 2rem;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .artiste-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+  }
+
+  .artiste-stat-nb {
+    font-family: var(--font-title);
+    font-size: 1.4rem;
+    color: var(--accent-gold);
+  }
+
+  .artiste-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  /* ── Tabs ── */
+  .artiste-tabs {
+    display: flex;
+    gap: 0;
+    padding: 0 2rem;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .artiste-tab {
+    padding: 1rem 1.5rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--transition);
+  }
+
+  .artiste-tab:hover {
+    color: var(--text-primary);
+  }
+
+  .artiste-tab.active {
+    color: var(--text-primary);
+    border-bottom-color: var(--accent-gold);
+  }
+
+  .artiste-tab-content {
+    display: none;
+    padding: 2rem;
+  }
+
+  .artiste-tab-content.active {
+    display: block;
+  }
+
+  /* ── Grille style YouTube ── */
+  .yt-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.2rem;
+  }
+
+  .yt-content-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: var(--text-primary);
+    transition: var(--transition);
+  }
+
+  .yt-content-card-link {
+    text-decoration: none;
+  }
+
+  .yt-content-thumbnail {
+    position: relative;
+    aspect-ratio: 16/9;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--bg-card);
+    cursor: pointer;
+  }
+
+  .yt-content-thumbnail img,
+  .yt-thumb-placeholder {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .yt-thumb-placeholder {
+    display: flex;
+    align-items: center;
     justify-content: center;
+    font-size: 2.5rem;
+    background: var(--bg-secondary);
   }
-  
-  .artiste-actions {
+
+  .yt-thumb-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
     justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+    opacity: 0;
+    transition: var(--transition);
   }
-  
-  .morceaux-grid,
-  .videos-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+
+  .yt-content-card:hover .yt-thumb-overlay {
+    opacity: 1;
   }
-}
-</style>
-{% endblock %}
 
-{% block content %}
-<div class="main-content">
-  <div class="artiste-header">
-    <div class="artiste-photo-container">
-      {% if artiste.photo %}
-        <img src="{{ artiste.photo.url }}" alt="{{ artiste.nom_artiste }}" class="artiste-photo">
-      {% else %}
-        <div class="artiste-photo-placeholder">🎤</div>
-      {% endif %}
-    </div>
-    
-    <div class="artiste-info">
-      <h1 class="artiste-nom">{{ artiste.nom_artiste }}</h1>
-      
-      {% if artiste.bio %}
-        <div class="artiste-bio">{{ artiste.bio }}</div>
-      {% endif %}
-      
-      <div class="artiste-stats">
-        <div class="stat-item">
-          <div class="stat-number">{{ artiste.morceaux.count }}</div>
-          <div class="stat-label">Morceaux</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">{{ artiste.videos.count }}</div>
-          <div class="stat-label">Vidéos</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">{{ artiste.total_points }}</div>
-          <div class="stat-label">Points</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">{{ artiste.total_votes }}</div>
-          <div class="stat-label">Votes</div>
-        </div>
-      </div>
-      
-      <div class="artiste-actions">
-        <button class="btn-suivre" onclick="suivreArtiste({{ artiste.id }})">
-          ❤️ Suivre
-        </button>
-        <button class="btn-small" onclick="partagerArtiste({{ artiste.id }})">
-          🔗 Partager
-        </button>
-      </div>
-    </div>
-  </div>
-  
-  <div class="content-sections">
-    <!-- Morceaux -->
-    <div class="section">
-      <div class="section-header">
-        <h2 class="section-title">🎵 Morceaux</h2>
-        <span class="section-count">{{ morceaux.count }} morceau{{ morceaux.count|pluralize:"x" }}</span>
-      </div>
-      
-      {% if morceaux %}
-        <div class="morceaux-grid">
-          {% for morceau in morceaux %}
-            <div class="morceau-card" onclick="playMorceau({{ morceau.id }})">
-              {% if morceau.pochette %}
-                <img src="{{ morceau.pochette.url }}" alt="{{ morceau.titre }}" class="card-cover">
-              {% else %}
-                <div class="card-cover-placeholder">🎵</div>
-              {% endif %}
-              
-              <div class="card-titre">{{ morceau.titre }}</div>
-              
-              <div class="card-meta">
-                <span class="card-points">⭐ {{ morceau.points }}</span>
-                <span>👍 {{ morceau.nb_votes }}</span>
-              </div>
-              
-              <div class="card-actions">
-                <button class="btn-small" onclick="event.stopPropagation(); playMorceau({{ morceau.id }})">
-                  ▶
-                </button>
-                <button class="btn-small" onclick="event.stopPropagation(); ouvrirModalTelechargement({{ morceau.id }})">
-                  ⬇
-                </button>
-              </div>
-            </div>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="empty-section">
-          <i>🎵</i>
-          <h3>Aucun morceau</h3>
-          <p>Cet artiste n'a pas encore publié de morceau.</p>
-        </div>
-      {% endif %}
-    </div>
-    
-    <!-- Vidéos -->
-    <div class="section">
-      <div class="section-header">
-        <h2 class="section-title">📺 Vidéos</h2>
-        <span class="section-count">{{ videos.count }} vidéo{{ videos.count|pluralize:"s" }}</span>
-      </div>
-      
-      {% if videos %}
-        <div class="videos-grid">
-          {% for video in videos %}
-            <div class="video-card" onclick="jouerVideo({{ video.id }}, '{{ video.titre|escapejs }}', '{{ video.fichier_video.url }}')">
-              {% if video.thumbnail %}
-                <img src="{{ video.thumbnail.url }}" alt="{{ video.titre }}" class="card-cover">
-              {% else %}
-                <div class="card-cover-placeholder">📺</div>
-              {% endif %}
-              
-              <div class="card-titre">{{ video.titre }}</div>
-              
-              <div class="card-meta">
-                <span>👁 {{ video.nb_vues }} vues</span>
-                <span>📅 {{ video.created_at|date:"d/m/Y" }}</span>
-              </div>
-            </div>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="empty-section">
-          <i>📺</i>
-          <h3>Aucune vidéo</h3>
-          <p>Cet artiste n'a pas encore publié de vidéo.</p>
-        </div>
-      {% endif %}
-    </div>
-  </div>
-</div>
-
-<!-- Modal vidéo (réutiliser celle de tv.html) -->
-<div id="video-modal" class="video-modal" style="display: none;">
-  <div class="modal-content">
-    <button class="modal-close" onclick="fermerModalVideo()">✕</button>
-    <video id="modal-video-player" class="modal-video" controls>
-      <source src="" type="video/mp4">
-      Votre navigateur ne supporte pas les vidéos.
-    </video>
-  </div>
-</div>
-
-<script>
-// Données de l'artiste
-window.artisteData = {
-  id: {{ artiste.id }},
-  nom_artiste: "{{ artiste.nom_artiste|escapejs }}",
-  photo: {% if artiste.photo %}"{{ artiste.photo.url }}"{% else %}null{% endif %},
-  bio: "{{ artiste.bio|default:''|escapejs }}"
-};
-
-// Données des morceaux
-window.morceauxData = [
-  {% for morceau in morceaux %}
-  {
-    id: {{ morceau.id }},
-    titre: "{{ morceau.titre|escapejs }}",
-    pochette: {% if morceau.pochette %}"{{ morceau.pochette.url }}"{% else %}"{% static 'img/default-cover.jpg' %}"{% endif %},
-    fichier_mp3: "{{ morceau.fichier_mp3.url }}",
-    points: {{ morceau.points }}
-  }{% if not forloop.last %},{% endif %}
-  {% endfor %}
-];
-
-function playMorceau(morceauId) {
-  const morceau = window.morceauxData.find(m => m.id === morceauId);
-  if (morceau && window.miniPlayer) {
-    window.miniPlayer.loadMorceau(morceau, window.morceauxData);
-    window.miniPlayer.play();
+  .yt-content-card-link:hover .yt-thumb-overlay {
+    opacity: 1;
   }
-}
 
-function jouerVideo(videoId, titre, videoUrl) {
-  // Enregistrer la vue
-  fetch(`/engagement/vue-video/${videoId}/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'X-CSRFToken': getCsrfToken()
-    },
-    body: ''
-  })
-  .then(response => response.json())
-  .then(data => {
-    console.log('Vue enregistrée:', data);
-  })
-  .catch(error => {
-    console.error('Erreur:', error);
-  });
-  
-  // Ouvrir la modal
-  const modal = document.getElementById('video-modal');
-  const videoPlayer = document.getElementById('modal-video-player');
-  
-  videoPlayer.src = videoUrl;
-  modal.style.display = 'flex';
-  videoPlayer.play();
-}
-
-function fermerModalVideo() {
-  const modal = document.getElementById('video-modal');
-  const videoPlayer = document.getElementById('modal-video-player');
-  
-  videoPlayer.pause();
-  videoPlayer.src = '';
-  modal.style.display = 'none';
-}
-
-function suivreArtiste(artisteId) {
-  // TODO: Implémenter la fonctionnalité de suivi
-  alert('Fonctionnalité de suivi bientôt disponible !');
-}
-
-function partagerArtiste(artisteId) {
-  const url = window.location.href;
-  
-  if (navigator.share) {
-    navigator.share({
-      title: window.artisteData.nom_artiste + ' - Badju\'s Records',
-      url: url
-    });
-  } else {
-    navigator.clipboard.writeText(url).then(() => {
-      showNotification('Lien copié dans le presse-papiers !', 'success');
-    });
+  .yt-thumb-type {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
   }
-}
 
-function getCsrfToken() {
-  const cookies = document.cookie.split(';');
-  for (let cookie of cookies) {
-    const parts = cookie.trim().split('=');
-    if (parts[0] === 'csrftoken') {
-      return decodeURIComponent(parts[1]);
+  .audio-badge {
+    background: rgba(245, 166, 35, 0.85);
+    color: #0A0A0F;
+  }
+
+  .video-badge {
+    background: rgba(255, 0, 0, 0.85);
+    color: white;
+  }
+
+  .yt-thumb-vues {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 0.5rem;
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    font-size: 0.72rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .yt-content-info {
+    padding: 0 0.2rem;
+  }
+
+  .yt-content-artiste-mini {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .yt-mini-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .yt-mini-placeholder {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .yt-content-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    flex: 1;
+  }
+
+  .yt-content-titre {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .yt-content-titre:hover {
+    color: var(--accent-gold);
+  }
+
+  .yt-content-meta {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+
+  .yt-content-actions {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0 0.2rem;
+  }
+
+  .yt-action-mini {
+    padding: 0.35rem 0.7rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+  }
+
+  .yt-action-mini:hover {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    border-color: var(--accent-gold);
+  }
+
+  /* ── À propos ── */
+  .apropos-container {
+    max-width: 700px;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .apropos-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .apropos-titre {
+    font-family: var(--font-title);
+    font-size: 1.2rem;
+    color: var(--text-primary);
+  }
+
+  .apropos-texte {
+    color: var(--text-muted);
+    line-height: 1.7;
+    font-size: 0.95rem;
+  }
+
+  .apropos-vide {
+    color: var(--text-dark);
+    font-style: italic;
+  }
+
+  .apropos-infos {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .apropos-info-item {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .apropos-info-label {
+    color: var(--text-muted);
+    min-width: 120px;
+  }
+
+  .apropos-info-val {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .apropos-reseaux {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .reseau-btn {
+    padding: 0.5rem 1.2rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: var(--transition);
+  }
+
+  .reseau-fb {
+    background: rgba(24, 119, 242, 0.15);
+    color: #1877F2;
+    border: 1px solid rgba(24, 119, 242, 0.3);
+  }
+
+  .reseau-ig {
+    background: rgba(225, 48, 108, 0.15);
+    color: #E1306C;
+    border: 1px solid rgba(225, 48, 108, 0.3);
+  }
+
+  .reseau-tw {
+    background: rgba(29, 161, 242, 0.15);
+    color: #1DA1F2;
+    border: 1px solid rgba(29, 161, 242, 0.3);
+  }
+
+  .reseau-fb:hover {
+    background: #1877F2;
+    color: white;
+  }
+
+  .reseau-ig:hover {
+    background: #E1306C;
+    color: white;
+  }
+
+  .reseau-tw:hover {
+    background: #1DA1F2;
+    color: white;
+  }
+
+  /* ── Abonnement ── */
+  .btn-abonne-actif {
+    border-color: var(--accent-green) !important;
+    color: var(--accent-green) !important;
+  }
+
+  .btn-abonne-actif:hover {
+    background: rgba(0, 255, 135, 0.1) !important;
+  }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    z-index: 9999;
+    white-space: nowrap;
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateX(-50%) translateY(20px);
+      opacity: 0;
+    }
+
+    to {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
     }
   }
-  return '';
-}
 
-function showNotification(message, type) {
-  type = type || 'info';
-  
-  const notification = document.createElement('div');
-  notification.className = 'message message-' + type;
-  notification.innerHTML = message + '<button class="message-close" onclick="this.parentElement.remove()">✕</button>';
-  
-  let container = document.querySelector('.messages-container');
-  if (!container) {
-    container = document.createElement('div');
-    container.className = 'messages-container';
-    container.style.cssText = 'position: fixed; top: calc(var(--navbar-height) + 1rem); right: 1rem; z-index: 3000; display: flex; flex-direction: column; gap: 0.75rem; max-width: 380px;';
-    document.body.appendChild(container);
+  .toast-success {
+    background: rgba(0, 200, 100, 0.15);
+    border: 1px solid rgba(0, 200, 100, 0.4);
+    color: #00CC64;
   }
-  
-  container.appendChild(notification);
-  
-  setTimeout(() => {
-    if (notification.parentElement) {
-      notification.remove();
+
+  .toast-error {
+    background: rgba(255, 68, 68, 0.15);
+    border: 1px solid rgba(255, 68, 68, 0.4);
+    color: var(--accent-red);
+  }
+
+  .toast-info {
+    background: rgba(0, 150, 255, 0.15);
+    border: 1px solid rgba(0, 150, 255, 0.4);
+    color: #60AAFF;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .artiste-profil-bar {
+      padding: 0 1rem 1.5rem;
+      margin-top: -30px;
     }
-  }, 5000);
-}
 
-// Fermer la modal avec Échap
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    fermerModalVideo();
+    .artiste-avatar {
+      width: 60px;
+      height: 60px;
+    }
+
+    .artiste-nom {
+      font-size: 1.4rem;
+    }
+
+    .artiste-profil-actions {
+      width: 100%;
+    }
+
+    .artiste-stats-bar {
+      padding: 1rem;
+      gap: 1.2rem;
+    }
+
+    .artiste-tabs {
+      padding: 0 1rem;
+    }
+
+    .artiste-tab-content {
+      padding: 1.5rem 1rem;
+    }
+
+    .yt-grid {
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
   }
-});
-
-// Fermer la modal en cliquant sur le fond
-document.getElementById('video-modal').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) {
-    fermerModalVideo();
-  }
-});
-</script>
-
-<style>
-.video-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.9);
-  z-index: 9999;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-content {
-  position: relative;
-  max-width: 90vw;
-  max-height: 90vh;
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-.modal-video {
-  width: 100%;
-  height: auto;
-  max-height: 80vh;
-}
-
-.modal-close {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: var(--transition);
-  z-index: 10;
-}
-
-.modal-close:hover {
-  background: var(--accent-red);
-}
 </style>
 {% endblock %}
