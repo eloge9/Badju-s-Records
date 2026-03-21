@@ -51,11 +51,11 @@
           🔗 Partager
         </button>
 
-        <!-- Télécharger le morceau -->
+        <!-- Écouter le son -->
         {% if video.morceau %}
-        <button class="yt-action-btn yt-action-gold" onclick="jouerMorceauAssocie()">
+        <a href="{% url 'detail_morceau' video.morceau.id %}" class="yt-action-btn yt-action-gold">
           🎵 Écouter le son
-        </button>
+        </a>
         {% endif %}
 
         {% if video.morceau and video.morceau.fichier_mp3 %}
