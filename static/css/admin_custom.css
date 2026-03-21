@@ -1,0 +1,247 @@
+/* ── Badju's Records — Admin Custom CSS ── */
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap');
+
+/* ── Variables couleurs ── */
+:root {
+  --bg-primary:   #0A0A0F;
+  --bg-secondary: #12121A;
+  --bg-card:      #1A1A25;
+  --accent-gold:  #F5A623;
+  --text-primary: #FFFFFF;
+  --text-muted:   #A0A0B0;
+  --border:       rgba(255,255,255,0.08);
+}
+
+/* ── Police globale ── */
+body,
+#main-content,
+.unfold-sidebar {
+  font-family: 'DM Sans', sans-serif !important;
+}
+
+/* ── Titres en Bebas Neue ── */
+h1, h2, h3,
+.site-header .site-name,
+#branding h1,
+.unfold-sidebar .sidebar-title,
+.model-name,
+.object-tools a,
+.submit-row input[type="submit"] {
+  font-family: 'Bebas Neue', sans-serif !important;
+  letter-spacing: 1px;
+}
+
+/* ── Fond sombre global ── */
+html, body {
+  background-color: var(--bg-primary) !important;
+}
+
+/* ── Sidebar ── */
+[data-sidebar],
+.unfold-sidebar {
+  background: var(--bg-secondary) !important;
+  border-right: 1px solid var(--border) !important;
+}
+
+/* ── Logo dans la sidebar ── */
+.unfold-sidebar img {
+  filter: brightness(1.1);
+}
+
+/* ── Titre du site ── */
+.site-header,
+#branding {
+  background: var(--bg-secondary) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+#branding h1 a,
+#branding h1 a:visited {
+  color:       var(--accent-gold) !important;
+  font-family: 'Bebas Neue', sans-serif !important;
+  font-size:   1.6rem !important;
+  letter-spacing: 2px !important;
+}
+
+/* ── Contenu principal ── */
+#content,
+#main-content,
+.main,
+[data-content] {
+  background: var(--bg-primary) !important;
+}
+
+/* ── Cards / modules ── */
+.module,
+.unfold-card,
+[data-card] {
+  background:    var(--bg-card) !important;
+  border:        1px solid var(--border) !important;
+  border-radius: 12px !important;
+}
+
+/* ── Tableaux ── */
+#result_list,
+.results table {
+  background:    var(--bg-card) !important;
+  border-radius: 12px !important;
+  overflow:      hidden;
+}
+
+#result_list thead th,
+.results thead th {
+  background:  var(--bg-secondary) !important;
+  color:       var(--text-muted) !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-size:   0.78rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+#result_list tbody tr {
+  border-bottom: 1px solid var(--border) !important;
+  transition:    background 0.15s !important;
+}
+
+#result_list tbody tr:hover {
+  background: rgba(245, 166, 35, 0.04) !important;
+}
+
+#result_list tbody td {
+  color:      var(--text-primary) !important;
+  font-size:  0.88rem !important;
+  padding:    0.85rem 1rem !important;
+}
+
+/* ── Liens ── */
+a, a:visited {
+  color: var(--accent-gold) !important;
+}
+a:hover {
+  color:           #fff !important;
+  text-decoration: none !important;
+}
+
+/* ── Boutons ── */
+.button,
+input[type="submit"],
+input[type="button"],
+.submit-row input,
+.unfold-button {
+  background:    var(--accent-gold) !important;
+  color:         #0A0A0F !important;
+  border:        none !important;
+  border-radius: 8px !important;
+  font-family:   'DM Sans', sans-serif !important;
+  font-weight:   700 !important;
+  padding:       0.5rem 1.2rem !important;
+  cursor:        pointer !important;
+  transition:    all 0.15s !important;
+}
+
+.button:hover,
+input[type="submit"]:hover {
+  background:  #e09520 !important;
+  transform:   translateY(-1px) !important;
+}
+
+/* Bouton supprimer en rouge */
+.deletelink,
+.button.default[name="_addanother"] {
+  background: rgba(255,68,68,0.15) !important;
+  color:      #FF4444 !important;
+  border:     1px solid rgba(255,68,68,0.3) !important;
+}
+
+/* ── Formulaires ── */
+input[type="text"],
+input[type="email"],
+input[type="url"],
+input[type="number"],
+input[type="password"],
+textarea,
+select {
+  background:    var(--bg-secondary) !important;
+  border:        1px solid var(--border) !important;
+  border-radius: 8px !important;
+  color:         var(--text-primary) !important;
+  padding:       0.6rem 0.9rem !important;
+  font-family:   'DM Sans', sans-serif !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent-gold) !important;
+  outline:      none !important;
+  box-shadow:   0 0 0 3px rgba(245,166,35,0.15) !important;
+}
+
+/* ── Filtres sidebar droite ── */
+#changelist-filter {
+  background:  var(--bg-secondary) !important;
+  border-left: 1px solid var(--border) !important;
+}
+
+#changelist-filter h2,
+#changelist-filter h3 {
+  background: var(--bg-card) !important;
+  color:      var(--text-muted) !important;
+  font-size:  0.72rem !important;
+}
+
+#changelist-filter li.selected a {
+  color: var(--accent-gold) !important;
+}
+
+/* ── Breadcrumbs ── */
+.breadcrumbs {
+  background:  var(--bg-secondary) !important;
+  border-bottom: 1px solid var(--border) !important;
+  color:       var(--text-muted) !important;
+  font-size:   0.82rem !important;
+}
+
+/* ── Messages d'alerte ── */
+.messagelist .success {
+  background: rgba(0,200,100,0.1) !important;
+  border:     1px solid rgba(0,200,100,0.3) !important;
+  color:      #00CC64 !important;
+  border-radius: 8px !important;
+}
+
+.messagelist .error {
+  background: rgba(255,68,68,0.1) !important;
+  border:     1px solid rgba(255,68,68,0.3) !important;
+  color:      #FF4444 !important;
+  border-radius: 8px !important;
+}
+
+/* ── Pagination ── */
+.paginator {
+  background: var(--bg-secondary) !important;
+  border-top: 1px solid var(--border) !important;
+  color:      var(--text-muted) !important;
+}
+
+.paginator a {
+  background:    var(--bg-card) !important;
+  border:        1px solid var(--border) !important;
+  border-radius: 6px !important;
+  padding:       4px 10px !important;
+}
+
+/* ── Badges statut ── */
+.field-statut .valide  { color: #00CC64; font-weight: 600; }
+.field-statut .refuse  { color: #FF4444; font-weight: 600; }
+.field-statut .en_attente { color: var(--accent-gold); font-weight: 600; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-gold); }
