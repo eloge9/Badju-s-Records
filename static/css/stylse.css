@@ -1018,6 +1018,17 @@ textarea {
   padding: 0;
   cursor: pointer;
   accent-color: var(--accent-gold);
+  pointer-events: auto;
+  position: relative;
+  z-index: 10;
+}
+
+#player-bar {
+  cursor: pointer;
+  pointer-events: auto;
+  position: relative;
+  z-index: 10;
+  accent-color: var(--accent-gold);
 }
 
 .player-volume {

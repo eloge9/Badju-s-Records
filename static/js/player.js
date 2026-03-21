@@ -12,6 +12,82 @@ let playerPochette = null;
 let playlist = [];
 let indexCourant = 0;
 
+// ─────────────────────────────────────────────
+// BARRE DE PROGRESSION — avec support du drag
+// ─────────────────────────────────────────────
+
+var enTrainDeSeeker = false;
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    var audio = document.getElementById('audio-global');
+    var playerBar = document.getElementById('player-bar');
+
+    if (!audio || !playerBar) return;
+
+    // ── Détecter quand l'utilisateur commence à déplacer la barre ──
+    playerBar.addEventListener('mousedown', function () { enTrainDeSeeker = true; });
+    playerBar.addEventListener('touchstart', function () { enTrainDeSeeker = true; });
+
+    // ── Quand l'utilisateur relâche → appliquer le seek ──
+    playerBar.addEventListener('mouseup', function () {
+        if (!audio.duration) return;
+        audio.currentTime = (parseFloat(playerBar.value) / 100) * audio.duration;
+        enTrainDeSeeker = false;
+    });
+
+    playerBar.addEventListener('touchend', function () {
+        if (!audio.duration) return;
+        audio.currentTime = (parseFloat(playerBar.value) / 100) * audio.duration;
+        enTrainDeSeeker = false;
+    });
+
+    // ── Sur changement de valeur (clavier, clic direct) ──
+    playerBar.addEventListener('change', function () {
+        if (!audio.duration) return;
+        audio.currentTime = (parseFloat(playerBar.value) / 100) * audio.duration;
+    });
+
+    // ── Mettre à jour la barre pendant la lecture ──
+    audio.addEventListener('timeupdate', function () {
+        if (enTrainDeSeeker) return; // ← ne pas écraser pendant le drag
+        if (!audio.duration) return;
+        var pct = (audio.currentTime / audio.duration) * 100;
+        playerBar.value = pct;
+
+        // Mettre à jour le temps affiché
+        var playerCurrent = document.getElementById('player-current-time');
+        var playerDuration = document.getElementById('player-total-time');
+        if (playerCurrent) playerCurrent.textContent = formaterTemps(audio.currentTime);
+        if (playerDuration) playerDuration.textContent = formaterTemps(audio.duration);
+    });
+
+});
+
+// ─────────────────────────────────────────────
+// SEEK — appelé depuis le template si oninput
+// ─────────────────────────────────────────────
+
+function playerSeek(valeur) {
+    var audio = document.getElementById('audio-global');
+    if (!audio || !audio.duration) return;
+    audio.currentTime = (parseFloat(valeur) / 100) * audio.duration;
+}
+
+// ─────────────────────────────────────────────
+// CONTROLE VOLUME
+// ─────────────────────────────────────────────
+
+function playerVolume(valeur) {
+    var audio = document.getElementById('audio-global');
+    if (!audio) return;
+    audio.volume = parseFloat(valeur) / 100;
+}
+
+// ─────────────────────────────────────────────
+// RESTE DU PLAYER (inchangé)
+// ─────────────────────────────────────────────
+
 // Initialisation au chargement du DOM
 document.addEventListener('DOMContentLoaded', function () {
     console.log("Player: Initialisation...");
@@ -39,7 +115,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Configurer les événements
-    audio.addEventListener('timeupdate', updateProgress);
     audio.addEventListener('ended', nextTrack);
     audio.addEventListener('error', function (e) {
         // Ignorer les erreurs quand src est vide (état initial au chargement)
@@ -127,29 +202,6 @@ function togglePlay() {
     }
 }
 
-// ── Mettre à jour la barre de progression ──
-function updateProgress() {
-    const current = audio.currentTime;
-    const duration = audio.duration || 0;
-
-    // Mettre à jour le temps actuel (si l'élément existe)
-    const currentTimeEl = document.getElementById("player-current-time");
-    const totalTimeEl = document.getElementById("player-total-time");
-    const progressBar = document.getElementById("player-progress");
-
-    if (currentTimeEl) {
-        currentTimeEl.textContent = formatTime(current);
-    }
-
-    if (totalTimeEl) {
-        totalTimeEl.textContent = formatTime(duration);
-    }
-
-    if (progressBar && duration > 0) {
-        progressBar.value = (current / duration) * 100;
-    }
-}
-
 // ── Piste suivante ──
 function nextTrack() {
     if (playlist.length > 0 && indexCourant < playlist.length - 1) {
@@ -159,7 +211,7 @@ function nextTrack() {
 }
 
 // ── Formatage du temps ──
-function formatTime(seconds) {
+function formaterTemps(seconds) {
     if (isNaN(seconds)) return "0:00";
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
@@ -178,4 +230,4 @@ window.playerPrev = function () {
     }
 };
 
-window.playerToggle = togglePlay;
+window.playerPlayPause = togglePlay;

@@ -10,18 +10,19 @@
 
   <div class="player-controls">
     <button id="btn-prev" title="Précédent" onclick="playerPrev()">⏮</button>
-    <button id="btn-play-pause" title="Play/Pause">▶</button>
+    <button id="btn-play-pause" title="Play/Pause" onclick="playerPlayPause()">▶</button>
     <button id="btn-next" title="Suivant" onclick="playerNext()">⏭</button>
   </div>
 
   <div class="player-progress">
     <span id="player-current-time">0:00</span>
-    <input type="range" id="player-progress" value="0" min="0" max="100" />
+    <input type="range" id="player-bar" value="0" min="0" max="100" step="0.1" style="cursor:pointer;"
+      onchange="playerSeek(this.value)" />
     <span id="player-total-time">0:00</span>
   </div>
 
   <div class="player-volume">
     <span>🔊</span>
-    <input type="range" id="player-volume" value="70" min="0" max="100" />
+    <input type="range" id="player-volume" value="70" min="0" max="100" onchange="playerVolume(this.value)" />
   </div>
 </div>
