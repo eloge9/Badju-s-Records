@@ -58,10 +58,18 @@
         </button>
         {% endif %}
 
-        <button class="yt-action-btn yt-action-gold"
-          onclick="ouvrirModalTelechargement({{ video.morceau.id|default:0 }})">
+        {% if video.morceau and video.morceau.fichier_mp3 %}
+        {% if user.is_authenticated %}
+        <a href="{{ video.morceau.fichier_mp3.url }}" download="{{ video.morceau.titre }}.mp3"
+          class="yt-action-btn yt-action-gold" onclick="showToast('📥 Téléchargement démarré !'); return true;">
           ⬇ Télécharger le son
-        </button>
+        </a>
+        {% else %}
+        <a href="{% url 'connexion' %}" class="yt-action-btn yt-action-gold">
+          ⬇ Télécharger le son
+        </a>
+        {% endif %}
+        {% endif %}
 
       </div>
     </div>
@@ -432,6 +440,67 @@
   function ajusterHauteur(el) {
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
+  }
+
+  function telechargerSon(morceauId) {
+    var btn = document.getElementById('btn-telecharger-son');
+    var csrf = getCsrfToken();
+
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Préparation...';
+    }
+
+    var formData = new FormData();
+    formData.append('pub_vue', 'false');
+
+    fetch('/engagement/telecharger/' + morceauId + '/', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrf },
+      body: formData,
+    })
+      .then(function (r) {
+        if (!r.ok) {
+          throw new Error('HTTP ' + r.status);
+        }
+        return r.json();
+      })
+      .then(function (data) {
+        console.log('Réponse téléchargement:', data);
+
+        if (data.succes && data.url) {
+          var a = document.createElement('a');
+          a.href = data.url;
+          a.download = '';
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(function () { document.body.removeChild(a); }, 1000);
+
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = '✅ Téléchargé !';
+            setTimeout(function () {
+              btn.textContent = '⬇ Télécharger le son';
+            }, 3000);
+          }
+          showToast('📥 Téléchargement démarré !');
+        } else {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = '⬇ Télécharger le son';
+          }
+          showToast('❌ ' + (data.message || 'Erreur lors du téléchargement'));
+        }
+      })
+      .catch(function (error) {
+        console.error('Erreur téléchargement:', error);
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '⬇ Télécharger le son';
+        }
+        showToast('❌ Erreur réseau. Réessaie.');
+      });
   }
 
   function getCsrfToken() {

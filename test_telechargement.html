@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Téléchargement Badju's Records</title>
+</head>
+<body>
+    <h1>🎵 Test Téléchargement Badju's Records</h1>
+    
+    <div id="test-results"></div>
+    
+    <button onclick="testTelechargement()">Tester le téléchargement</button>
+    
+    <script>
+        function testTelechargement() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<p>🔍 Test en cours...</p>';
+            
+            // Test 1: Vérifier si la fonction telechargerSon existe
+            if (typeof telechargerSon === 'function') {
+                results.innerHTML += '<p>✅ Fonction telechargerSon trouvée</p>';
+            } else {
+                results.innerHTML += '<p>❌ Fonction telechargerSon non trouvée</p>';
+                return;
+            }
+            
+            // Test 2: Vérifier si le bouton existe
+            const btn = document.getElementById('btn-telecharger-son');
+            if (btn) {
+                results.innerHTML += '<p>✅ Bouton btn-telecharger-son trouvé</p>';
+            } else {
+                results.innerHTML += '<p>❌ Bouton btn-telecharger-son non trouvé</p>';
+            }
+            
+            // Test 3: Vérifier la route de téléchargement
+            fetch('/engagement/telecharger/1/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': 'test' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                results.innerHTML += '<p>✅ Route de téléchargement accessible</p>';
+                results.innerHTML += '<p>📝 Réponse: ' + JSON.stringify(data) + '</p>';
+            })
+            .catch(error => {
+                results.innerHTML += '<p>❌ Erreur route: ' + error.message + '</p>';
+            });
+        }
+        
+        // Test automatique au chargement
+        window.onload = function() {
+            testTelechargement();
+        };
+    </script>
+</body>
+</html>

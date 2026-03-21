@@ -4,7 +4,7 @@ from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from models_app.models import (
     Morceau, Video, Vote, Telechargement,
-    VueVideo, LikeVideo, CommentaireVideo, Abonnement, ProfilArtiste, EcouteMorceau
+    VueVideo, LikeVideo, CommentaireVideo, Abonnement, ProfilArtiste, EcouteMorceau, Publicite
 )
 
 
