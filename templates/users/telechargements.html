@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  {% if est_admin %}Tous les téléchargements{% else %}Mes téléchargements{% endif %}
+  — Badju's Records
+{% endblock %}
+
+{% block content %}
+<div class="dl-container">
+
+  <!-- Header -->
+  <div class="dl-header">
+    <div class="dl-header-left">
+      <h1 class="dl-titre">
+        ⬇ {% if est_admin %}Tous les téléchargements{% else %}Mes téléchargements{% endif %}
+      </h1>
+      <p class="dl-sous-titre">
+        {% if est_admin %}
+          Vue complète de tous les téléchargements de la plateforme
+        {% else %}
+          Tous les morceaux que tu as téléchargés
+        {% endif %}
+      </p>
+    </div>
+    <div class="dl-header-right">
+      <div class="dl-stat-badge">
+        <span class="dl-stat-nb">{{ nb_total }}</span>
+        <span class="dl-stat-label">téléchargement{{ nb_total|pluralize }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau -->
+  {% if telechargements %}
+    <div class="dl-liste">
+
+      <!-- En-tête tableau -->
+      <div class="dl-row dl-row-header {% if est_admin %}admin-row{% endif %}">
+        <span class="dl-col dl-col-morceau">Morceau</span>
+        <span class="dl-col dl-col-artiste">Artiste</span>
+        {% if est_admin %}
+          <span class="dl-col dl-col-user">Utilisateur</span>
+        {% endif %}
+        <span class="dl-col dl-col-date">Date</span>
+        <span class="dl-col dl-col-pub">Pub vue</span>
+        <span class="dl-col dl-col-actions">Actions</span>
+      </div>
+
+      <!-- Lignes -->
+      {% for dl in telechargements %}
+        <div class="dl-row {% if est_admin %}admin-row{% endif %}">
+
+          <!-- Pochette + titre -->
+          <div class="dl-col dl-col-morceau">
+            <div class="dl-morceau-info">
+              {% if dl.morceau.pochette %}
+                <img src="{{ dl.morceau.pochette.url }}"
+                     alt="{{ dl.morceau.titre }}"
+                     class="dl-pochette">
+              {% else %}
+                <div class="dl-pochette dl-pochette-placeholder">🎵</div>
+              {% endif %}
+              <div class="dl-morceau-text">
+                <span class="dl-morceau-titre">{{ dl.morceau.titre }}</span>
+                <span class="dl-morceau-genre">{{ dl.morceau.get_genre_display }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Artiste -->
+          <div class="dl-col dl-col-artiste">
+            <a href="{% url 'detail_artiste' dl.morceau.artiste.id %}"
+               class="dl-artiste-lien">
+              {{ dl.morceau.artiste.nom_artiste }}
+            </a>
+          </div>
+
+          <!-- Utilisateur (admin seulement) -->
+          {% if est_admin %}
+            <div class="dl-col dl-col-user">
+              {% if dl.user %}
+                <span class="dl-user">@{{ dl.user.username }}</span>
+              {% else %}
+                <span class="dl-user-anonyme">Anonyme</span>
+              {% endif %}
+            </div>
+          {% endif %}
+
+          <!-- Date -->
+          <div class="dl-col dl-col-date">
+            <span class="dl-date">{{ dl.created_at|date:"d M Y" }}</span>
+            <span class="dl-heure">{{ dl.created_at|date:"H:i" }}</span>
+          </div>
+
+          <!-- Pub vue -->
+          <div class="dl-col dl-col-pub">
+            {% if dl.pub_vue %}
+              <span class="dl-badge dl-badge-oui">✓ Oui</span>
+            {% else %}
+              <span class="dl-badge dl-badge-non">✗ Non</span>
+            {% endif %}
+          </div>
+
+          <!-- Actions -->
+          <div class="dl-col dl-col-actions">
+            <button
+              class="btn btn-gold btn-sm"
+              onclick="retelcharger({{ dl.morceau.id }})">
+              ⬇ Retélécharger
+            </button>
+            <a href="{% url 'detail_morceau' dl.morceau.id %}"
+               class="btn btn-ghost btn-sm">
+              👁 Voir
+            </a>
+          </div>
+
+        </div>
+      {% endfor %}
+    </div>
+
+  {% else %}
+    <div class="empty-block">
+      {% if est_admin %}
+        <p>Aucun téléchargement enregistré sur la plateforme.</p>
+      {% else %}
+        <p>Tu n'as encore téléchargé aucun morceau.</p>
+        <a href="{% url 'top100' %}" class="btn btn-gold" style="margin-top:1rem;">
+          Découvrir le Top 100
+        </a>
+      {% endif %}
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+function retelcharger(morceauId) {
+  var csrf = document.cookie.split(';')
+    .find(function(c) { return c.trim().startsWith('csrftoken='); });
+  csrf = csrf ? csrf.split('=')[1] : '';
+
+  var formData = new FormData();
+  formData.append('pub_vue', 'false');
+
+  fetch('/engagement/telecharger/' + morceauId + '/', {
+    method:  'POST',
+    headers: { 'X-CSRFToken': csrf },
+    body:    formData,
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.succes && data.url) {
+      var a           = document.createElement('a');
+      a.href          = data.url;
+      a.download      = '';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function() { document.body.removeChild(a); }, 1000);
+    }
+  });
+}
+</script>
+{% endblock %}
+
+
+{% block extra_css %}
+<style>
+
+.dl-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+/* ── Header ── */
+.dl-header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  margin-bottom:   2rem;
+  flex-wrap:       wrap;
+  gap:             1rem;
+}
+.dl-titre      { font-family: var(--font-title); font-size: 2rem; letter-spacing: 1px; }
+.dl-sous-titre { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem; }
+.dl-stat-badge {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  background:     var(--bg-card);
+  border:         1px solid var(--border);
+  border-radius:  var(--radius-md);
+  padding:        0.75rem 1.5rem;
+}
+.dl-stat-nb    { font-family: var(--font-title); font-size: 2rem; color: var(--accent-gold); line-height: 1; }
+.dl-stat-label { font-size: 0.78rem; color: var(--text-muted); }
+
+/* ── Liste ── */
+.dl-liste { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.dl-row {
+  display:       grid;
+  grid-template-columns: 2fr 1.2fr 0.8fr 0.6fr 0.6fr 1fr;
+  align-items:   center;
+  gap:           1rem;
+  padding:       0.75rem 1rem;
+  background:    var(--bg-card);
+  border:        1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition:    var(--transition);
+}
+.dl-row:hover          { border-color: var(--border-hover); }
+.dl-row-header {
+  background:    var(--bg-secondary);
+  border-color:  transparent;
+  font-size:     0.78rem;
+  font-weight:   600;
+  color:         var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.dl-row-header:hover { border-color: transparent; }
+
+/* Si admin : 7 colonnes */
+.dl-row.admin-row {
+  grid-template-columns: 2fr 1fr 1fr 0.8fr 0.6fr 1fr;
+}
+
+/* ── Colonnes ── */
+.dl-morceau-info {
+  display:     flex;
+  align-items: center;
+  gap:         0.75rem;
+}
+.dl-pochette {
+  width:         44px;
+  height:        44px;
+  border-radius: var(--radius-sm);
+  object-fit:    cover;
+  flex-shrink:   0;
+}
+.dl-pochette-placeholder {
+  background:       var(--bg-secondary);
+  display:          flex;
+  align-items:      center;
+  justify-content:  center;
+  font-size:        1.2rem;
+}
+.dl-morceau-text  { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.dl-morceau-titre { font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dl-morceau-genre { font-size: 0.75rem; color: var(--text-muted); }
+.dl-artiste-lien  { color: var(--accent-gold); font-size: 0.85rem; font-weight: 500; }
+.dl-artiste-lien:hover { text-decoration: underline; }
+.dl-user          { font-size: 0.82rem; color: var(--text-muted); }
+.dl-user-anonyme  { font-size: 0.82rem; color: var(--text-dark); font-style: italic; }
+.dl-date          { font-size: 0.82rem; color: var(--text-primary); display: block; }
+.dl-heure         { font-size: 0.75rem; color: var(--text-muted); display: block; }
+
+.dl-badge {
+  display:       inline-flex;
+  align-items:   center;
+  padding:       2px 8px;
+  border-radius: 20px;
+  font-size:     0.75rem;
+  font-weight:   600;
+}
+.dl-badge-oui { background: rgba(0,200,100,0.12); color: var(--accent-green); border: 1px solid rgba(0,200,100,0.3); }
+.dl-badge-non { background: rgba(255,68,68,0.1);  color: var(--accent-red);   border: 1px solid rgba(255,68,68,0.2); }
+
+.dl-col-actions { display: flex; gap: 0.4rem; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .dl-row { grid-template-columns: 2fr 1fr 0.8fr 1fr; }
+  .dl-col-pub, .dl-col-artiste { display: none; }
+}
+@media (max-width: 600px) {
+  .dl-container { padding: 1rem; }
+  .dl-row       { grid-template-columns: 1fr auto; }
+  .dl-col-date, .dl-col-pub, .dl-col-artiste { display: none; }
+}
+</style>
+{% endblock %}

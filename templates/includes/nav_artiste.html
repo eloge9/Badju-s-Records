@@ -1,7 +1,12 @@
 {% load static %}
-<nav class="navbar">
+<nav class="navbar navbar-artiste">
+
   <a href="{% url 'accueil' %}" class="navbar-logo">
     <img src="{% static 'img/logo-transparent.png' %}" alt="Badju's Records" class="navbar-logo-img">
+    <div class="navbar-logo-text">
+      <span class="navbar-brand-name">Badju's Records</span>
+      <span class="navbar-tagline">Espace artiste</span>
+    </div>
   </a>
 
   <ul class="navbar-links">
@@ -11,39 +16,71 @@
     <li><a href="{% url 'liste_artistes' %}">Artistes</a></li>
   </ul>
 
-  <div class="navbar-auth">
-    <a href="{% url 'ajouter_morceau' %}" class="btn btn-outline">
-      + Ajouter un morceau
+  <!-- Stats artiste dans la navbar -->
+  <div class="navbar-artiste-stats">
+    <div class="navbar-stat">
+      <span class="navbar-stat-nb">{{ user.profil_artiste.total_morceaux }}</span>
+      <span class="navbar-stat-label">Morceaux</span>
+    </div>
+    <div class="navbar-stat">
+      <span class="navbar-stat-nb">{{ user.profil_artiste.total_votes }}</span>
+      <span class="navbar-stat-label">Votes</span>
+    </div>
+    <div class="navbar-stat">
+      <span class="navbar-stat-nb">
+        {{ user.profil_artiste.meilleur_rang|default:"—" }}
+      </span>
+      <span class="navbar-stat-label">Rang</span>
+    </div>
+  </div>
+
+  <button class="navbar-hamburger" onclick="toggleMenu()" id="hamburger-btn">
+    <span></span><span></span><span></span>
+  </button>
+
+  <div class="navbar-auth" id="navbar-menu">
+    <a href="{% url 'ajouter_morceau' %}" class="btn btn-outline btn-sm">
+      + Morceau
     </a>
     <div class="navbar-user">
+
       {% if user.profil_artiste.photo %}
-      <img src="{{ user.profil_artiste.photo.url }}" alt="avatar" class="navbar-avatar" />
+      <img src="{{ user.profil_artiste.photo.url }}" alt="photo artiste" class="navbar-avatar navbar-avatar-artiste">
       {% elif user.avatar %}
-      <img src="{{ user.avatar.url }}" alt="avatar" class="navbar-avatar" />
+      <img src="{{ user.avatar.url }}" alt="avatar" class="navbar-avatar navbar-avatar-artiste">
       {% else %}
-      <div class="navbar-avatar-placeholder">
-        {{ user.username|first|upper }}
+      <div class="navbar-avatar-placeholder navbar-avatar-artiste">
+        {{ user.profil_artiste.nom_artiste|first|upper }}
       </div>
       {% endif %}
+
       <div class="navbar-dropdown">
-        <span class="navbar-username">
-          {{ user.profil_artiste.nom_artiste }}{% if user.profil_artiste.verified %}<span class="badge-verified"
-            title="Artiste vérifié">✓</span>{% endif %}
-        </span>
+        <div class="navbar-user-info">
+          <span class="navbar-username">
+            {{ user.profil_artiste.nom_artiste }}
+            {% if user.profil_artiste.verified %}
+            <span class="badge-verified">✓</span>
+            {% endif %}
+          </span>
+          <span class="badge-artiste">🎤 Artiste</span>
+        </div>
         <ul class="dropdown-menu">
           <li><a href="{% url 'dashboard' %}">🎵 Mon Dashboard</a></li>
-          <li>
-            <a href="{% url 'ajouter_morceau' %}">🎶 Ajouter un morceau</a>
-          </li>
+          <li><a href="{% url 'mes_telechargements' %}">⬇ Mes Téléchargements</a></li>
+          <li><a href="{% url 'ajouter_morceau' %}">🎶 Ajouter un morceau</a></li>
           <li><a href="{% url 'ajouter_video' %}">🎬 Ajouter une vidéo</a></li>
           <li class="dropdown-divider"></li>
           <li><a href="{% url 'modifier_profil' %}">✏️ Modifier profil</a></li>
           <li class="dropdown-divider"></li>
           <li>
-            <a href="{% url 'deconnexion' %}" class="dropdown-logout">🚪 Déconnexion</a>
+            <a href="{% url 'deconnexion' %}" class="dropdown-logout">
+              🚪 Déconnexion
+            </a>
           </li>
         </ul>
       </div>
+
     </div>
   </div>
+
 </nav>

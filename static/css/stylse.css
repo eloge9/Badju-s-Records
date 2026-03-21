@@ -74,35 +74,77 @@ img {
    NAVBAR
 ───────────────────────────────────────────── */
 .navbar {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 1000;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: rgba(10, 10, 15, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: var(--navbar-height);
-  padding: 0 2rem;
-  background: rgba(10, 10, 15, 0.95);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
+  padding: 0 2.5rem;
+  z-index: 3000;
+  gap: 2rem;
 }
 
 .navbar-admin {
   border-bottom: 1px solid rgba(245, 166, 35, 0.3);
 }
 
+.navbar-brand-name {
+  font-family: var(--font-title);
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+  color: var(--accent-gold);
+  line-height: 1;
+}
+
+.navbar-tagline {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.navbar-logo-img {
+  height: 44px;
+  width: auto;
+}
+
+.navbar-avatar,
+.navbar-avatar-placeholder {
+  width: 42px;
+  height: 42px;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    height: 64px;
+    padding: 0 1rem;
+  }
+
+  .navbar-brand-name {
+    font-size: 1.4rem;
+  }
+
+  .navbar-logo-img {
+    height: 36px;
+  }
+
+  .mini-player {
+    bottom: 0;
+  }
+}
+
 .navbar-logo {
   font-family: var(--font-title);
   font-size: 1.6rem;
   color: var(--accent-gold);
-  letter-spacing: 1px;
   display: flex;
   align-items: center;
-}
-
-.navbar-logo-img {
-  height: 40px;
-  width: auto;
+  gap: 0.75rem;
+  text-decoration: none;
   transition: var(--transition);
 }
 
@@ -120,8 +162,9 @@ img {
   color: var(--text-muted);
   font-weight: 500;
   font-size: 0.95rem;
-  transition: var(--transition);
+  text-decoration: none;
   position: relative;
+  transition: var(--transition);
 }
 
 .navbar-links a::after {

@@ -11,4 +11,5 @@ urlpatterns = [
     path('profil/<str:username>/', views.profil_public, name='profil_public'),
     path('notifications/',           views.notifications,               name='notifications'),
     path('notifications/nb/',        views.nb_notifications_non_lues,   name='nb_notifications'),
+    path('telechargements/', views.mes_telechargements, name='mes_telechargements'),
 ]

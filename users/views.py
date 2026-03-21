@@ -11,8 +11,38 @@ from .forms import (
 )
 from models_app.models import (
     User, ProfilUtilisateur, ProfilArtiste,
-    Vote, Telechargement, Abonnement
+    Vote, Telechargement, Abonnement, Morceau
 )
+
+
+# ─────────────────────────────────────────────
+# TÉLÉCHARGEMENTS
+# ─────────────────────────────────────────────
+
+@login_required
+def mes_telechargements(request):
+    from models_app.models import Telechargement
+
+    # Admin → voit tous les téléchargements
+    if request.user.role == 'administrateur' or request.user.is_staff:
+        telechargements = Telechargement.objects.select_related(
+            'morceau', 'morceau__artiste', 'user'
+        ).order_by('-created_at')
+        est_admin = True
+    else:
+        # Utilisateur → voit seulement les siens
+        telechargements = Telechargement.objects.filter(
+            user=request.user
+        ).select_related(
+            'morceau', 'morceau__artiste'
+        ).order_by('-created_at')
+        est_admin = False
+
+    return render(request, 'users/telechargements.html', {
+        'telechargements': telechargements,
+        'nb_total':        telechargements.count(),
+        'est_admin':       est_admin,
+    })
 
 
 # ─────────────────────────────────────────────

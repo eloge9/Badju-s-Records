@@ -1,7 +1,12 @@
 {% load static %}
 <nav class="navbar navbar-admin">
+
   <a href="{% url 'accueil' %}" class="navbar-logo">
     <img src="{% static 'img/logo-transparent.png' %}" alt="Badju's Records" class="navbar-logo-img">
+    <div class="navbar-logo-text">
+      <span class="navbar-brand-name">Badju's Records</span>
+      <span class="navbar-tagline">Panneau d'administration</span>
+    </div>
   </a>
 
   <ul class="navbar-links">
@@ -11,36 +16,62 @@
     <li><a href="{% url 'liste_artistes' %}">Artistes</a></li>
   </ul>
 
-  <div class="navbar-auth">
-    <a href="{% url 'recalculer_classement' %}" class="btn btn-outline">
-      🔄 Recalculer classement
+  <!-- Lien téléchargements -->
+  <a href="{% url 'mes_telechargements' %}" class="navbar-dl-link">
+    ⬇ <span>Téléchargements</span>
+  </a>
+
+  <button class="navbar-hamburger" onclick="toggleMenu()" id="hamburger-btn">
+    <span></span><span></span><span></span>
+  </button>
+
+  <div class="navbar-auth" id="navbar-menu">
+    <a href="/admin/models_app/morceau/?statut=en_attente" class="btn btn-outline btn-sm">
+      ⏳ En attente
     </a>
+    <a href="{% url 'recalculer_classement' %}" class="btn btn-outline btn-sm">
+      🔄 Classement
+    </a>
+
     <div class="navbar-user">
       {% if user.avatar %}
-      <img src="{{ user.avatar.url }}" alt="avatar" class="navbar-avatar" />
+      <img src="{{ user.avatar.url }}" alt="avatar" class="navbar-avatar navbar-avatar-admin">
       {% else %}
       <div class="navbar-avatar-placeholder navbar-avatar-admin">
         {{ user.username|first|upper }}
       </div>
       {% endif %}
+
       <div class="navbar-dropdown">
-        <span class="navbar-username">{{ user.username }} 🛡️</span>
+        <div class="navbar-user-info">
+          <span class="navbar-username">{{ user.username }} 🛡️</span>
+          <span class="badge-admin">Admin</span>
+        </div>
         <ul class="dropdown-menu">
           <li><a href="/admin/">🛡️ Administration</a></li>
+          <li><a href="{% url 'mes_telechargements' %}">⬇ Tous les téléchargements</a></li>
           <li>
-            <a href="/admin/models_app/morceau/?statut=en_attente">⏳ Morceaux en attente</a>
+            <a href="/admin/models_app/morceau/?statut=en_attente">
+              ⏳ Morceaux en attente
+            </a>
           </li>
           <li>
-            <a href="/admin/models_app/video/?statut=en_attente">⏳ Vidéos en attente</a>
+            <a href="/admin/models_app/video/?statut=en_attente">
+              ⏳ Vidéos en attente
+            </a>
           </li>
           <li class="dropdown-divider"></li>
           <li><a href="{% url 'modifier_profil' %}">✏️ Modifier profil</a></li>
           <li class="dropdown-divider"></li>
           <li>
-            <a href="{% url 'deconnexion' %}" class="dropdown-logout">🚪 Déconnexion</a>
+            <a href="{% url 'deconnexion' %}" class="dropdown-logout">
+              🚪 Déconnexion
+            </a>
           </li>
         </ul>
       </div>
+
     </div>
   </div>
+
 </nav>

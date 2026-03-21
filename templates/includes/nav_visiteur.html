@@ -1,9 +1,16 @@
 {% load static %}
 <nav class="navbar">
+
+  <!-- Logo -->
   <a href="{% url 'accueil' %}" class="navbar-logo">
     <img src="{% static 'img/logo-transparent.png' %}" alt="Badju's Records" class="navbar-logo-img">
+    <div class="navbar-logo-text">
+      <span class="navbar-brand-name">Badju's Records</span>
+      <span class="navbar-tagline">La voix de la musique togolaise</span>
+    </div>
   </a>
 
+  <!-- Liens -->
   <ul class="navbar-links">
     <li><a href="{% url 'accueil' %}">Accueil</a></li>
     <li><a href="{% url 'top100' %}">Top 100</a></li>
@@ -11,8 +18,15 @@
     <li><a href="{% url 'liste_artistes' %}">Artistes</a></li>
   </ul>
 
-  <div class="navbar-auth">
+  <!-- Bouton hamburger mobile -->
+  <button class="navbar-hamburger" onclick="toggleMenu()" id="hamburger-btn">
+    <span></span><span></span><span></span>
+  </button>
+
+  <!-- Auth -->
+  <div class="navbar-auth" id="navbar-menu">
     <a href="{% url 'connexion' %}" class="btn btn-outline">Connexion</a>
     <a href="{% url 'inscription' %}" class="btn btn-gold">S'inscrire</a>
   </div>
+
 </nav>
