@@ -1,6 +1,7 @@
 {% load static %}
 <nav class="navbar">
 
+  <!-- ── Logo ── -->
   <a href="{% url 'accueil' %}" class="navbar-logo">
     <img src="{% static 'img/logo-transparent.png' %}" alt="Badju's Records" class="navbar-logo-img">
     <div class="navbar-logo-text">
@@ -9,6 +10,7 @@
     </div>
   </a>
 
+  <!-- ── Liens navigation ── -->
   <ul class="navbar-links">
     <li><a href="{% url 'accueil' %}">Accueil</a></li>
     <li><a href="{% url 'top100' %}">Top 100</a></li>
@@ -16,49 +18,258 @@
     <li><a href="{% url 'liste_artistes' %}">Artistes</a></li>
   </ul>
 
-  <!-- Lien téléchargements -->
-  <a href="{% url 'mes_telechargements' %}" class="navbar-dl-link">
-    ⬇ <span>Téléchargements</span>
-  </a>
-
+  <!-- ── Hamburger mobile ── -->
   <button class="navbar-hamburger" onclick="toggleMenu()" id="hamburger-btn">
     <span></span><span></span><span></span>
   </button>
 
+  <!-- ── Zone droite ── -->
   <div class="navbar-auth" id="navbar-menu">
+
+    <!-- Lien téléchargements visible -->
+    <a href="{% url 'mes_telechargements' %}" class="navbar-dl-link">
+      ⬇ <span class="navbar-dl-text">Téléchargements</span>
+    </a>
+
+    <!-- Bouton devenir artiste -->
+    <a href="{% url 'devenir_artiste' %}" class="navbar-artiste-cta">
+      🎤 <span class="navbar-cta-text">Devenir Artiste</span>
+    </a>
+
+    <!-- Avatar + dropdown -->
     <div class="navbar-user">
 
-      <!-- Avatar -->
-      {% if user.avatar %}
-      <img src="{{ user.avatar.url }}" alt="avatar" class="navbar-avatar">
-      {% else %}
-      <div class="navbar-avatar-placeholder">
-        {{ user.username|first|upper }}
+      <!-- Avatar avec point vert -->
+      <div class="navbar-avatar-wrapper">
+        {% if user.avatar %}
+        <img src="{{ user.avatar.url }}" alt="avatar" class="navbar-avatar navbar-avatar-utilisateur">
+        {% else %}
+        <div class="navbar-avatar-placeholder navbar-avatar-utilisateur">
+          {{ user.username|first|upper }}
+        </div>
+        {% endif %}
+        <span class="navbar-online-dot"></span>
       </div>
-      {% endif %}
 
       <!-- Dropdown -->
       <div class="navbar-dropdown">
+
         <div class="navbar-user-info">
           <span class="navbar-username">{{ user.nom_affiche }}</span>
           <span class="badge-utilisateur">Utilisateur</span>
         </div>
-        <ul class="dropdown-menu">
+
+        <ul class="dropdown-menu dropdown-menu-utilisateur">
+
+          <!-- Header dropdown avec infos utilisateur -->
+          <li class="dropdown-header">
+            <div class="dropdown-user-info">
+              {% if user.avatar %}
+              <img src="{{ user.avatar.url }}" class="dropdown-user-avatar" alt="avatar">
+              {% else %}
+              <div class="dropdown-user-avatar dropdown-user-avatar-placeholder">
+                {{ user.username|first|upper }}
+              </div>
+              {% endif %}
+              <div class="dropdown-user-text">
+                <span class="dropdown-user-nom">{{ user.nom_affiche }}</span>
+                <span class="dropdown-user-role">
+                  {% if user.pays %}🌍 {{ user.pays }}{% else %}Membre Badju's Records{% endif %}
+                </span>
+              </div>
+            </div>
+          </li>
+
+          <li class="dropdown-divider"></li>
+
           <li><a href="{% url 'mon_espace' %}">👤 Mon Espace</a></li>
           <li><a href="{% url 'mes_telechargements' %}">⬇ Mes Téléchargements</a></li>
-          <li><a href="{% url 'modifier_profil' %}">✏️ Modifier profil</a></li>
+          <li><a href="{% url 'modifier_profil' %}">✏️ Modifier mon profil</a></li>
+
           <li class="dropdown-divider"></li>
-          <li><a href="{% url 'devenir_artiste' %}">🎤 Devenir Artiste</a></li>
+
+          <li>
+            <a href="{% url 'devenir_artiste' %}" class="dropdown-artiste-link">
+              🎤 Devenir Artiste
+            </a>
+          </li>
+
           <li class="dropdown-divider"></li>
+
           <li>
             <a href="{% url 'deconnexion' %}" class="dropdown-logout">
               🚪 Déconnexion
             </a>
           </li>
+
         </ul>
       </div>
-
     </div>
   </div>
 
 </nav>
+
+<style>
+  /* ── Avatar utilisateur ── */
+  .navbar-avatar-utilisateur {
+    border: 2px solid rgba(255, 255, 255, 0.15) !important;
+    transition: border-color 0.2s;
+  }
+
+  .navbar-avatar-utilisateur:hover {
+    border-color: var(--accent-gold) !important;
+  }
+
+  /* ── Lien téléchargements ── */
+  .navbar-dl-link {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.8rem;
+    color: var(--text-muted);
+    font-size: 0.83rem;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: var(--transition);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .navbar-dl-link:hover {
+    color: var(--accent-gold);
+    border-color: var(--accent-gold);
+    background: rgba(245, 166, 35, 0.06);
+  }
+
+  /* ── Bouton devenir artiste ── */
+  .navbar-artiste-cta {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.9rem;
+    background: rgba(245, 166, 35, 0.1);
+    border: 1px solid rgba(245, 166, 35, 0.35);
+    border-radius: 8px;
+    color: var(--accent-gold);
+    font-size: 0.83rem;
+    font-weight: 600;
+    transition: var(--transition);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .navbar-artiste-cta:hover {
+    background: rgba(245, 166, 35, 0.2);
+    border-color: var(--accent-gold);
+    transform: translateY(-1px);
+  }
+
+  /* ── Point vert en ligne ── */
+  .navbar-avatar-wrapper {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .navbar-online-dot {
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #00CC64;
+    border: 2px solid var(--bg-secondary);
+  }
+
+  /* ── Dropdown utilisateur ── */
+  .dropdown-menu-utilisateur {
+    min-width: 230px !important;
+  }
+
+  .dropdown-header {
+    padding: 0.75rem !important;
+    pointer-events: none;
+  }
+
+  .dropdown-user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .dropdown-user-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    flex-shrink: 0;
+  }
+
+  .dropdown-user-avatar-placeholder {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .dropdown-user-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .dropdown-user-nom {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+  }
+
+  .dropdown-user-role {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  /* Lien devenir artiste dans le dropdown — mis en valeur */
+  .dropdown-artiste-link {
+    color: var(--accent-gold) !important;
+    font-weight: 600 !important;
+  }
+
+  .dropdown-artiste-link:hover {
+    background: rgba(245, 166, 35, 0.08) !important;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 1024px) {
+    .navbar-cta-text {
+      display: none;
+    }
+
+    .navbar-artiste-cta {
+      padding: 0.4rem 0.6rem;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .navbar-dl-text {
+      display: none;
+    }
+
+    .navbar-dl-link {
+      padding: 0.4rem 0.6rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+
+    .navbar-dl-link,
+    .navbar-artiste-cta {
+      display: none;
+    }
+  }
+</style>

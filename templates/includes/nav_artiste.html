@@ -1,14 +1,16 @@
 {% load static %}
 <nav class="navbar navbar-artiste">
 
+  <!-- ── Logo ── -->
   <a href="{% url 'accueil' %}" class="navbar-logo">
     <img src="{% static 'img/logo-transparent.png' %}" alt="Badju's Records" class="navbar-logo-img">
     <div class="navbar-logo-text">
       <span class="navbar-brand-name">Badju's Records</span>
-      <span class="navbar-tagline">Espace artiste</span>
+      <span class="navbar-tagline">Espace artiste 🎤</span>
     </div>
   </a>
 
+  <!-- ── Liens navigation ── -->
   <ul class="navbar-links">
     <li><a href="{% url 'accueil' %}">Accueil</a></li>
     <li><a href="{% url 'top100' %}">Top 100</a></li>
@@ -16,71 +18,302 @@
     <li><a href="{% url 'liste_artistes' %}">Artistes</a></li>
   </ul>
 
-  <!-- Stats artiste dans la navbar -->
+  <!-- ── Stats artiste (centre) ── -->
   <div class="navbar-artiste-stats">
     <div class="navbar-stat">
       <span class="navbar-stat-nb">{{ user.profil_artiste.total_morceaux }}</span>
       <span class="navbar-stat-label">Morceaux</span>
     </div>
+    <div class="navbar-stat-divider"></div>
     <div class="navbar-stat">
       <span class="navbar-stat-nb">{{ user.profil_artiste.total_votes }}</span>
       <span class="navbar-stat-label">Votes</span>
     </div>
+    <div class="navbar-stat-divider"></div>
     <div class="navbar-stat">
       <span class="navbar-stat-nb">
-        {{ user.profil_artiste.meilleur_rang|default:"—" }}
+        {% if user.profil_artiste.meilleur_rang %}
+        #{{ user.profil_artiste.meilleur_rang }}
+        {% else %}
+        —
+        {% endif %}
       </span>
-      <span class="navbar-stat-label">Rang</span>
+      <span class="navbar-stat-label">Meilleur rang</span>
     </div>
   </div>
 
+  <!-- ── Hamburger mobile ── -->
   <button class="navbar-hamburger" onclick="toggleMenu()" id="hamburger-btn">
     <span></span><span></span><span></span>
   </button>
 
+  <!-- ── Zone droite ── -->
   <div class="navbar-auth" id="navbar-menu">
-    <a href="{% url 'ajouter_morceau' %}" class="btn btn-outline btn-sm">
-      + Morceau
+
+    <!-- Bouton rapide ajouter morceau -->
+    <a href="{% url 'ajouter_morceau' %}" class="navbar-add-btn">
+      <span class="navbar-add-icon">+</span>
+      <span class="navbar-add-text">Morceau</span>
     </a>
+
+    <!-- Avatar + dropdown -->
     <div class="navbar-user">
 
-      {% if user.profil_artiste.photo %}
-      <img src="{{ user.profil_artiste.photo.url }}" alt="photo artiste" class="navbar-avatar navbar-avatar-artiste">
-      {% elif user.avatar %}
-      <img src="{{ user.avatar.url }}" alt="avatar" class="navbar-avatar navbar-avatar-artiste">
-      {% else %}
-      <div class="navbar-avatar-placeholder navbar-avatar-artiste">
-        {{ user.profil_artiste.nom_artiste|first|upper }}
+      <!-- Avatar avec point vert -->
+      <div class="navbar-avatar-wrapper">
+        {% if user.profil_artiste.photo %}
+        <img src="{{ user.profil_artiste.photo.url }}" alt="photo artiste" class="navbar-avatar navbar-avatar-artiste">
+        {% elif user.avatar %}
+        <img src="{{ user.avatar.url }}" alt="avatar" class="navbar-avatar navbar-avatar-artiste">
+        {% else %}
+        <div class="navbar-avatar-placeholder navbar-avatar-artiste">
+          {{ user.profil_artiste.nom_artiste|first|upper }}
+        </div>
+        {% endif %}
+        <span class="navbar-online-dot"></span>
       </div>
-      {% endif %}
 
+      <!-- Dropdown -->
       <div class="navbar-dropdown">
+
         <div class="navbar-user-info">
           <span class="navbar-username">
             {{ user.profil_artiste.nom_artiste }}
             {% if user.profil_artiste.verified %}
-            <span class="badge-verified">✓</span>
+            <span class="badge-verified" title="Artiste vérifié">✓</span>
             {% endif %}
           </span>
           <span class="badge-artiste">🎤 Artiste</span>
         </div>
-        <ul class="dropdown-menu">
+
+        <ul class="dropdown-menu dropdown-menu-artiste">
+
+          <!-- Header dropdown avec infos artiste -->
+          <li class="dropdown-header">
+            <div class="dropdown-artiste-info">
+              {% if user.profil_artiste.photo %}
+              <img src="{{ user.profil_artiste.photo.url }}" class="dropdown-artiste-avatar" alt="avatar">
+              {% else %}
+              <div class="dropdown-artiste-avatar dropdown-artiste-avatar-placeholder">
+                {{ user.profil_artiste.nom_artiste|first|upper }}
+              </div>
+              {% endif %}
+              <div class="dropdown-artiste-text">
+                <span class="dropdown-artiste-nom">
+                  {{ user.profil_artiste.nom_artiste }}
+                  {% if user.profil_artiste.verified %}
+                  <span class="badge-verified">✓</span>
+                  {% endif %}
+                </span>
+                <span class="dropdown-artiste-role">
+                  Artiste • {{ user.profil_artiste.get_genre_display }}
+                </span>
+              </div>
+            </div>
+          </li>
+
+          <li class="dropdown-divider"></li>
+
           <li><a href="{% url 'dashboard' %}">🎵 Mon Dashboard</a></li>
           <li><a href="{% url 'mes_telechargements' %}">⬇ Mes Téléchargements</a></li>
+
+          <li class="dropdown-divider"></li>
+
           <li><a href="{% url 'ajouter_morceau' %}">🎶 Ajouter un morceau</a></li>
           <li><a href="{% url 'ajouter_video' %}">🎬 Ajouter une vidéo</a></li>
+
           <li class="dropdown-divider"></li>
-          <li><a href="{% url 'modifier_profil' %}">✏️ Modifier profil</a></li>
+
+          <li><a href="{% url 'modifier_profil' %}">✏️ Modifier mon profil</a></li>
+
           <li class="dropdown-divider"></li>
+
           <li>
             <a href="{% url 'deconnexion' %}" class="dropdown-logout">
               🚪 Déconnexion
             </a>
           </li>
+
         </ul>
       </div>
-
     </div>
   </div>
 
 </nav>
+
+<style>
+  /* ── Navbar artiste ── */
+  .navbar-artiste {
+    border-bottom: 2px solid rgba(245, 166, 35, 0.4) !important;
+    background: linear-gradient(to right,
+        var(--bg-secondary),
+        rgba(245, 166, 35, 0.04),
+        var(--bg-secondary)) !important;
+  }
+
+  /* ── Stats ── */
+  .navbar-artiste-stats {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+    background: rgba(245, 166, 35, 0.06);
+    border: 1px solid rgba(245, 166, 35, 0.2);
+    border-radius: 12px;
+    padding: 0.4rem 1rem;
+  }
+
+  .navbar-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 44px;
+  }
+
+  .navbar-stat-nb {
+    font-family: var(--font-title);
+    font-size: 1.1rem;
+    color: var(--accent-gold);
+    line-height: 1.1;
+  }
+
+  .navbar-stat-label {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .navbar-stat-divider {
+    width: 1px;
+    height: 28px;
+    background: rgba(245, 166, 35, 0.25);
+    flex-shrink: 0;
+  }
+
+  /* ── Bouton + Morceau ── */
+  .navbar-add-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.9rem;
+    background: rgba(245, 166, 35, 0.12);
+    border: 1px solid rgba(245, 166, 35, 0.4);
+    border-radius: 8px;
+    color: var(--accent-gold);
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: var(--transition);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .navbar-add-btn:hover {
+    background: rgba(245, 166, 35, 0.25);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+    transform: translateY(-1px);
+  }
+
+  .navbar-add-icon {
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  /* ── Avatar avec point vert ── */
+  .navbar-avatar-wrapper {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .navbar-online-dot {
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #00CC64;
+    border: 2px solid var(--bg-secondary);
+  }
+
+  .navbar-avatar-artiste {
+    border: 2px solid var(--accent-gold) !important;
+    box-shadow: 0 0 8px rgba(245, 166, 35, 0.3);
+  }
+
+  /* ── Dropdown artiste ── */
+  .dropdown-menu-artiste {
+    min-width: 240px !important;
+  }
+
+  .dropdown-header {
+    padding: 0.75rem !important;
+    pointer-events: none;
+  }
+
+  .dropdown-artiste-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .dropdown-artiste-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent-gold);
+    flex-shrink: 0;
+  }
+
+  .dropdown-artiste-avatar-placeholder {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .dropdown-artiste-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .dropdown-artiste-nom {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+  }
+
+  .dropdown-artiste-role {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 1100px) {
+    .navbar-artiste-stats {
+      display: none;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .navbar-add-text {
+      display: none;
+    }
+
+    .navbar-add-btn {
+      padding: 0.4rem 0.6rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .navbar-add-btn {
+      display: none;
+    }
+  }
+</style>
