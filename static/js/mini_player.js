@@ -14,7 +14,7 @@ class MiniPlayer {
         this.currentIndex = 0;
         this.progressBar = null;
         this.volumeSlider = null;
-        
+
         this.init();
     }
 
@@ -22,16 +22,16 @@ class MiniPlayer {
         // Créer l'élément audio
         this.audio = new Audio();
         this.setupAudioEvents();
-        
+
         // Récupérer les éléments du DOM
         this.getElements();
-        
+
         // Restaurer l'état depuis sessionStorage
         this.restoreState();
-        
+
         // Attacher les événements
         this.attachEvents();
-        
+
         // Mettre à jour l'interface
         this.updateUI();
     }
@@ -79,8 +79,12 @@ class MiniPlayer {
         });
 
         this.audio.addEventListener('error', (e) => {
-            console.error('Erreur audio:', e);
-            this.showNotification('Erreur lors du chargement du morceau', 'error');
+            // Ignorer les erreurs quand src est vide (état initial au chargement)
+            if (!this.audio.src || this.audio.src === window.location.href || this.audio.src === '') {
+                return;
+            }
+            // Log silencieux uniquement
+            console.warn('MiniPlayer: erreur audio', this.audio.src, e);
         });
     }
 
@@ -113,7 +117,7 @@ class MiniPlayer {
                 this.audio.volume = this.volume;
                 this.saveState();
             });
-            
+
             // Initialiser le volume
             this.volumeSlider.value = this.volume * 100;
         }
@@ -121,8 +125,8 @@ class MiniPlayer {
         // Événements clavier
         document.addEventListener('keydown', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            
-            switch(e.key) {
+
+            switch (e.key) {
                 case ' ':
                     e.preventDefault();
                     this.togglePlayPause();
@@ -152,14 +156,14 @@ class MiniPlayer {
 
         // Mettre à jour l'interface
         this.updateMorceauInfo();
-        
+
         // Charger le fichier audio
         this.audio.src = morceau.fichier_mp3;
         this.audio.load();
-        
+
         // Sauvegarder l'état
         this.saveState();
-        
+
         // Afficher le player s'il était caché
         const player = document.querySelector('.mini-player');
         if (player) {
@@ -173,12 +177,12 @@ class MiniPlayer {
         if (this.titreElement) {
             this.titreElement.textContent = this.currentMorceau.titre;
         }
-        
+
         if (this.artisteElement) {
-            this.artisteElement.textContent = this.currentMorceau.artiste.nom_artiste || 
-                                           this.currentMorceau.artiste.username;
+            this.artisteElement.textContent = this.currentMorceau.artiste.nom_artiste ||
+                this.currentMorceau.artiste.username;
         }
-        
+
         if (this.pochetteElement) {
             if (this.currentMorceau.pochette) {
                 this.pochetteElement.src = this.currentMorceau.pochette;
@@ -200,30 +204,30 @@ class MiniPlayer {
 
     playNext() {
         if (this.playlist.length === 0) return;
-        
+
         this.currentIndex = (this.currentIndex + 1) % this.playlist.length;
         const nextMorceau = this.playlist[this.currentIndex];
         this.loadMorceau(nextMorceau, this.playlist);
-        
+
         // Auto-play
         setTimeout(() => this.audio.play(), 100);
     }
 
     playPrevious() {
         if (this.playlist.length === 0) return;
-        
-        this.currentIndex = this.currentIndex === 0 ? 
-                           this.playlist.length - 1 : this.currentIndex - 1;
+
+        this.currentIndex = this.currentIndex === 0 ?
+            this.playlist.length - 1 : this.currentIndex - 1;
         const prevMorceau = this.playlist[this.currentIndex];
         this.loadMorceau(prevMorceau, this.playlist);
-        
+
         // Auto-play
         setTimeout(() => this.audio.play(), 100);
     }
 
     seek(seconds) {
         if (!this.audio.src) return;
-        
+
         const newTime = Math.max(0, Math.min(this.duration, this.currentTime + seconds));
         this.audio.currentTime = newTime;
     }
@@ -239,7 +243,7 @@ class MiniPlayer {
 
     updateProgressBar() {
         if (!this.progressBar || this.duration === 0) return;
-        
+
         const progress = (this.currentTime / this.duration) * 100;
         this.progressBar.value = progress;
     }
@@ -255,7 +259,7 @@ class MiniPlayer {
 
     updatePlayPauseButton() {
         if (!this.playPauseBtn) return;
-        
+
         const icon = this.playPauseBtn.querySelector('i') || this.playPauseBtn;
         if (this.isPlaying) {
             icon.textContent = '⏸';
@@ -271,7 +275,7 @@ class MiniPlayer {
         this.updatePlayPauseButton();
         this.updateProgressBar();
         this.updateTimeDisplay();
-        
+
         if (this.volumeSlider) {
             this.volumeSlider.value = this.volume * 100;
         }
@@ -279,7 +283,7 @@ class MiniPlayer {
 
     formatTime(seconds) {
         if (!seconds || isNaN(seconds)) return '0:00';
-        
+
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -306,7 +310,7 @@ class MiniPlayer {
             })),
             currentIndex: this.currentIndex
         };
-        
+
         sessionStorage.setItem('miniPlayerState', JSON.stringify(state));
     }
 
@@ -314,18 +318,18 @@ class MiniPlayer {
         try {
             const savedState = sessionStorage.getItem('miniPlayerState');
             if (!savedState) return;
-            
+
             const state = JSON.parse(savedState);
-            
+
             // Restaurer le volume
             this.volume = state.volume || 0.7;
             this.audio.volume = this.volume;
-            
+
             // Restaurer la playlist et le morceau actuel
             if (state.playlist && state.currentMorceau) {
                 this.playlist = state.playlist;
                 this.currentIndex = state.currentIndex || 0;
-                
+
                 // Recréer l'objet morceau (simplifié)
                 this.currentMorceau = {
                     id: state.currentMorceau.id,
@@ -336,19 +340,19 @@ class MiniPlayer {
                     pochette: state.currentMorceau.pochette,
                     fichier_mp3: state.currentMorceau.fichier_mp3
                 };
-                
+
                 // Charger le morceau
                 this.audio.src = this.currentMorceau.fichier_mp3;
                 this.audio.load();
-                
+
                 // Restaurer le temps actuel
                 if (state.currentTime) {
                     this.audio.currentTime = state.currentTime;
                 }
-                
+
                 // Mettre à jour l'interface
                 this.updateUI();
-                
+
                 // Restaurer l'état play/pause
                 if (state.isPlaying) {
                     // Ne pas auto-play au chargement de la page
@@ -380,9 +384,9 @@ class MiniPlayer {
             z-index: 3000;
             animation: slideUp 0.3s ease;
         `;
-        
+
         document.body.appendChild(notification);
-        
+
         setTimeout(() => {
             notification.style.animation = 'slideDown 0.3s ease';
             setTimeout(() => {

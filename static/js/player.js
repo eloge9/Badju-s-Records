@@ -13,9 +13,9 @@ let playlist = [];
 let indexCourant = 0;
 
 // Initialisation au chargement du DOM
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     console.log("Player: Initialisation...");
-    
+
     // Récupérer les éléments
     audio = document.getElementById("audio-global");
     miniPlayer = document.getElementById("mini-player");
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
     playerTitre = document.getElementById("player-titre");
     playerArtiste = document.getElementById("player-artiste");
     playerPochette = document.getElementById("player-pochette");
-    
+
     console.log("Player: Éléments trouvés:", {
         audio: !!audio,
         miniPlayer: !!miniPlayer,
@@ -32,31 +32,36 @@ document.addEventListener('DOMContentLoaded', function() {
         playerArtiste: !!playerArtiste,
         playerPochette: !!playerPochette
     });
-    
+
     if (!audio) {
         console.error("Player: Élément audio non trouvé!");
         return;
     }
-    
+
     // Configurer les événements
     audio.addEventListener('timeupdate', updateProgress);
     audio.addEventListener('ended', nextTrack);
-    audio.addEventListener('error', function(e) {
-        console.error("Player: Erreur audio:", e);
+    audio.addEventListener('error', function (e) {
+        // Ignorer les erreurs quand src est vide (état initial au chargement)
+        if (!audio.src || audio.src === window.location.href || audio.src === '') {
+            return;
+        }
+        // Log silencieux uniquement
+        console.warn('Player: erreur audio', audio.src, e);
     });
-    
+
     // Bouton play/pause
     if (playerBtn) {
         playerBtn.addEventListener('click', togglePlay);
     }
-    
+
     console.log("Player: Initialisation terminée");
 });
 
 // ── Fonction principale pour jouer un morceau ──
-window.jouerMorceau = function(data) {
+window.jouerMorceau = function (data) {
     console.log("Player: Jouer morceau:", data);
-    
+
     // Ajouter à la playlist si pas déjà présent
     const existe = playlist.findIndex(m => m.id === data.id);
     if (existe === -1) {
@@ -65,7 +70,7 @@ window.jouerMorceau = function(data) {
     } else {
         indexCourant = existe;
     }
-    
+
     // Charger et jouer
     loadTrack(data, true);
 };
@@ -73,11 +78,11 @@ window.jouerMorceau = function(data) {
 // ── Charger un morceau ──
 function loadTrack(data, autoplay) {
     console.log("Player: Charger morceau:", data.fichier);
-    
+
     // Mettre à jour les informations
     if (playerTitre) playerTitre.textContent = data.titre || "—";
     if (playerArtiste) playerArtiste.textContent = data.artiste || "—";
-    
+
     // Gérer la pochette
     if (playerPochette && data.pochette) {
         playerPochette.src = data.pochette;
@@ -85,22 +90,22 @@ function loadTrack(data, autoplay) {
     } else if (playerPochette) {
         playerPochette.style.display = "none";
     }
-    
-    // Charger le fichier audio
+
+    // Charger le fichier audio proprement
+    audio.pause();
+    audio.src = '';        // vider d'abord
     audio.src = data.fichier;
-    
+    audio.load();          // forcer le rechargement
+
     // Afficher le mini player
     if (miniPlayer) {
         miniPlayer.classList.remove("hidden");
     }
-    
+
     // Jouer automatiquement
     if (autoplay) {
-        audio.play().then(() => {
-            console.log("Player: Lecture démarrée");
-            if (playerBtn) playerBtn.textContent = "⏸";
-        }).catch(error => {
-            console.error("Player: Erreur de lecture:", error);
+        audio.play().catch(function (err) {
+            console.log('Autoplay bloqué:', err.message);
         });
     }
 }
@@ -111,7 +116,7 @@ function togglePlay() {
         console.log("Player: Pas de fichier audio chargé");
         return;
     }
-    
+
     if (audio.paused) {
         audio.play().then(() => {
             if (playerBtn) playerBtn.textContent = "⏸";
@@ -126,20 +131,20 @@ function togglePlay() {
 function updateProgress() {
     const current = audio.currentTime;
     const duration = audio.duration || 0;
-    
+
     // Mettre à jour le temps actuel (si l'élément existe)
     const currentTimeEl = document.getElementById("player-current-time");
     const totalTimeEl = document.getElementById("player-total-time");
     const progressBar = document.getElementById("player-progress");
-    
+
     if (currentTimeEl) {
         currentTimeEl.textContent = formatTime(current);
     }
-    
+
     if (totalTimeEl) {
         totalTimeEl.textContent = formatTime(duration);
     }
-    
+
     if (progressBar && duration > 0) {
         progressBar.value = (current / duration) * 100;
     }
@@ -162,11 +167,11 @@ function formatTime(seconds) {
 }
 
 // ── Fonctions globales pour les boutons ──
-window.playerNext = function() {
+window.playerNext = function () {
     nextTrack();
 };
 
-window.playerPrev = function() {
+window.playerPrev = function () {
     if (playlist.length > 0 && indexCourant > 0) {
         indexCourant--;
         loadTrack(playlist[indexCourant], true);

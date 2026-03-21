@@ -489,13 +489,16 @@
     };
 
   // Enregistrer l'écoute
-  enregistrerEcoute(morceauData.id);
+  if (typeof enregistrerEcoute === 'function') {
+    enregistrerEcoute(morceauData.id);
+  }
 
   // Jouer avec le player global
-  if (window.miniPlayer) {
-    window.miniPlayer.loadMorceau(morceauData);
-    window.miniPlayer.play();
+  if (typeof jouerMorceau === 'function') {
+    jouerMorceau(morceauData);
     showToast('🎵 Lecture du morceau...', 'success');
+  } else {
+    showToast('❌ Lecteur non disponible', 'error');
   }
   {% else %}
   showToast('❌ Ce clip n\'a pas de morceau associé', 'error');
